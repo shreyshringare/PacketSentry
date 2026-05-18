@@ -1,0 +1,53 @@
+signatures:
+  - id: SIG-001
+    name: SQL Injection Attempt
+    severity: HIGH
+    patterns:
+      - "SELECT * FROM"
+      - "UNION SELECT"
+      - "OR 1=1"
+      - "DROP TABLE"
+      - "'; --"
+    protocol: HTTP
+
+  - id: SIG-002
+    name: Port Scan Detection
+    severity: MEDIUM
+    patterns:
+      - "\x00\x00\x00\x00"
+    protocol: TCP
+    threshold: 10
+
+  - id: SIG-003
+    name: DNS Tunneling
+    severity: HIGH
+    patterns:
+      - ".onion"
+      - "base64"
+    protocol: DNS
+
+  - id: SIG-004
+    name: XSS Attempt
+    severity: HIGH
+    patterns:
+      - "<script>"
+      - "javascript:"
+      - "onerror="
+    protocol: HTTP
+
+  - id: SIG-005
+    name: Directory Traversal
+    severity: HIGH
+    patterns:
+      - "../../../"
+      - "..\\..\\..\\"
+      - "%2e%2e%2f"
+    protocol: HTTP
+
+  - id: SIG-006
+    name: Brute Force SSH
+    severity: CRITICAL
+    patterns:
+      - "SSH-2.0"
+    protocol: TCP
+    threshold: 20

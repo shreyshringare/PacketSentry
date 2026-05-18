@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / Tool config
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Ruff
+.ruff_cache/
+
+# Large dataset files (download separately)
+data/nslkdd/
+data/*.pcap
+
+# Models (large binary files — track with Git LFS or download separately)
+# Uncomment below if models are too large for GitHub:
+# models/*.json
+# models/*.pkl
+
+# DuckDB runtime data
+data/alerts.duckdb
+data/alerts.duckdb.wal
+
+# ChromaDB runtime data
+data/chroma/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
