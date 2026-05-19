@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from pythonjsonlogger import jsonlogger
 
 from ws_manager import WebSocketManager
 from routers import alerts as alerts_router
@@ -26,7 +27,24 @@ from routers import capture as capture_router
 from routers import demo as demo_router
 from routers import stats as stats_router
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+def _configure_logging() -> None:
+    """Configure root logger to emit JSON to stdout."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        jsonlogger.JsonFormatter(
+            fmt="%(asctime)s %(name)s %(levelname)s %(message)s",
+            rename_fields={"asctime": "ts", "levelname": "level", "name": "logger"},
+        )
+    )
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    # Remove any existing handlers to avoid duplicate output
+    root.handlers.clear()
+    root.addHandler(handler)
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
 
 _START_TIME = _time.time()
@@ -141,7 +159,15 @@ async def startup() -> None:
     admin_password = os.environ.get("PACKETSENTRY_ADMIN_PASSWORD", "admin")
     auth_router.set_admin_password(admin_password)
 
-    logger.info("PacketSentry API started — all components ready")
+    logger.info(
+        "PacketSentry API started — all components ready",
+        extra={
+            "host": "0.0.0.0",
+            "env": os.environ.get("ENVIRONMENT", "dev"),
+            "db_path": db_path,
+            "chroma_path": chroma_path,
+        },
+    )
 
 
 # -----------------------------------------------------------------------
