@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 
-export function Login() {
+export function Login({ onBack }: { onBack: () => void }) {
   const login = useAuthStore((s) => s.login);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,7 +37,12 @@ export function Login() {
     <div className="min-h-screen bg-[#C0C0C0] flex items-center justify-center">
       <div className="bg-white border-2 border-black shadow-brutalist p-8 w-full max-w-sm">
         <h1 className="font-black text-xl uppercase tracking-widest mb-1">PACKETSENTRY</h1>
-        <p className="text-xs font-mono text-gray-500 mb-6">// NIDS ACCESS CONTROL</p>
+        <p className="text-[10px] font-mono text-[#00FF41] bg-black px-2 py-0.5 inline-block mb-1 tracking-widest">
+          [&gt;] NIDS ACCESS CONTROL
+        </p>
+        <p className="text-[10px] font-mono text-gray-400 mb-6 mt-1">
+          7-model ML ensemble // SHAP-explained alerts
+        </p>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <div className="flex items-center border-2 border-black bg-black px-2 py-2">
@@ -65,6 +70,9 @@ export function Login() {
           >
             {loading ? "AUTHENTICATING..." : "LOGIN"}
           </button>
+          <p className="text-[9px] font-mono text-gray-400 mt-1 text-center">
+            FORGOT PASSWORD? Contact your admin to reset.
+          </p>
         </form>
 
         <div className="mt-4 pt-4 border-t-2 border-black">
@@ -78,6 +86,15 @@ export function Login() {
           <p className="text-[9px] text-gray-400 font-mono mt-2 text-center">
             Demo mode: pre-recorded data, no live capture
           </p>
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-gray-200 text-center">
+          <button
+            onClick={onBack}
+            className="text-[9px] font-mono text-gray-400 hover:text-gray-600 uppercase tracking-widest"
+          >
+            ← Back to home
+          </button>
         </div>
       </div>
     </div>

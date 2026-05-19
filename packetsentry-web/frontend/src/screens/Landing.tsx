@@ -21,7 +21,7 @@ const STACK = [
   "DuckDB + ChromaDB",
 ];
 
-export function Landing() {
+export function Landing({ onLogin }: { onLogin: () => void }) {
   const login = useAuthStore((s) => s.login);
 
   async function handleDemo() {
@@ -47,7 +47,7 @@ export function Landing() {
             GitHub
           </a>
           <button
-            onClick={() => useAuthStore.getState().logout()}
+            onClick={onLogin}
             className="border-2 border-black bg-black text-[#00FF41] px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
           >
             Login
@@ -90,14 +90,6 @@ export function Landing() {
             >
               TRY DEMO
             </button>
-            <a
-              href="https://github.com/shreyshringare/network-intrusion-detection"
-              target="_blank"
-              rel="noreferrer"
-              className="bg-white text-black border-2 border-black font-black uppercase tracking-wide px-6 py-3 text-sm hover:bg-black hover:text-white transition-colors duration-100"
-            >
-              VIEW CODE
-            </a>
           </div>
         </div>
 

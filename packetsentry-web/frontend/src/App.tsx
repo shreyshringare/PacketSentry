@@ -1,3 +1,4 @@
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopNav } from "./components/TopNav";
 import { Overview } from "./screens/Overview";
@@ -42,14 +43,11 @@ function Dashboard() {
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const token = useAuthStore((s) => s.token);
+  const [view, setView] = React.useState<"landing" | "login">("landing");
 
-  // No token at all → landing page
-  if (!token) return <Landing />;
-  // Token exists but not yet validated → show login
-  if (!isAuthenticated) return <Login />;
-  // Authenticated (admin or demo) → dashboard
-  return <Dashboard />;
+  if (isAuthenticated) return <Dashboard />;
+  if (view === "login") return <Login onBack={() => setView("landing")} />;
+  return <Landing onLogin={() => setView("login")} />;
 }
 
 export default function App() {
