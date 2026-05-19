@@ -99,6 +99,7 @@ async def startup() -> None:
     chroma_path = os.environ.get("CHROMA_PATH", "data/chroma")
 
     _store = DuckDBAlertStore(db_path=db_path)
+    os.chdir(os.path.join(os.path.dirname(__file__), "../.."))
     _arbiter = EnsembleArbiter()
     _vector_store = ChromaStore(persist_directory=chroma_path)
 

@@ -18,7 +18,7 @@ def _get_conn() -> duckdb.DuckDBPyConnection:
     con = duckdb.connect(str(_AUDIT_DB))
     con.execute("""
         CREATE TABLE IF NOT EXISTS audit_log (
-            id        INTEGER PRIMARY KEY,
+            id        VARCHAR DEFAULT gen_random_uuid() PRIMARY KEY,
             ts        TIMESTAMP NOT NULL,
             event     VARCHAR NOT NULL,
             ip        VARCHAR,
