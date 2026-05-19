@@ -27,3 +27,37 @@ policies:
     action: DENY
     rules:
       allowed_ports: [80, 443, 8000, 22]
+
+- id: SIG-007
+    name: Shellshock Attack
+    severity: CRITICAL
+    patterns:
+      - "() { :;"
+      - "() {"
+    protocol: HTTP
+
+  - id: SIG-008
+    name: Log4Shell
+    severity: CRITICAL
+    patterns:
+      - "${jndi:"
+      - "${${lower:"
+    protocol: HTTP
+
+  - id: SIG-009
+    name: Command Injection
+    severity: HIGH
+    patterns:
+      - "; cat /etc/passwd"
+      - "| whoami"
+      - "; /bin/sh"
+      - "&& wget"
+    protocol: HTTP
+
+  - id: SIG-010
+    name: Nikto Scanner
+    severity: MEDIUM
+    patterns:
+      - "Nikto"
+      - "nikto"
+    protocol: HTTP
