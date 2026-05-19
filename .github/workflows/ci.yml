@@ -1,12 +1,48 @@
+# .github/workflows/ci.yml
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv sync
-      - run: uv run ruff check .
-      - run: uv run pytest --cov=packetsentry --cov-report=term-missing
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint
+        run: uv run ruff check packetsentry/
+
+      - name: Test
+        run: uv run pytest tests/ -v --tb=short
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: packetsentry-web/frontend/package-lock.json
+
+      - name: Install frontend deps
+        run: cd packetsentry-web/frontend && npm ci
+
+      - name: TypeScript check
+        run: cd packetsentry-web/frontend && npx tsc --noEmit
+
+      - name: Build
+        run: cd packetsentry-web/frontend && npm run build
