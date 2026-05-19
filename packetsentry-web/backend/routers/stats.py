@@ -12,7 +12,9 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["stats"])
@@ -30,7 +32,7 @@ def set_dependencies(pipeline, store, vector_store) -> None:
 
 
 @router.get("/api/stats")
-async def get_stats() -> dict:
+async def get_stats(user: dict = Depends(get_current_user)) -> dict:
     """Return current pipeline statistics."""
     if _pipeline is None:
         return {"packets": 0, "flows": 0, "alerts": 0, "active_flows": 0, "bytes": 0}
@@ -38,7 +40,7 @@ async def get_stats() -> dict:
 
 
 @router.get("/api/flows/active")
-async def get_active_flows(limit: int = Query(50, ge=1, le=200)) -> list[dict]:
+async def get_active_flows(limit: int = Query(50, ge=1, le=200), user: dict = Depends(get_current_user)) -> list[dict]:
     """Return top flows sorted by anomaly score descending."""
     if _store is None:
         return []
@@ -66,6 +68,7 @@ async def get_active_flows(limit: int = Query(50, ge=1, le=200)) -> list[dict]:
 async def get_similar(
     alert_id: str,
     top: int = Query(5, ge=1, le=20),
+    user: dict = Depends(get_current_user),
 ) -> dict:
     """Return ChromaDB top-N similar alerts by embedding cosine similarity."""
     if _vector_store is None:
@@ -97,6 +100,6 @@ async def get_similar(
 
 
 @router.get("/api/clusters")
-async def get_clusters() -> dict:
+async def get_clusters(user: dict = Depends(get_current_user)) -> dict:
     """Stub for Phase 3 Memory/UMAP screen."""
     return {"clusters": [], "note": "Phase 3 — not yet implemented"}

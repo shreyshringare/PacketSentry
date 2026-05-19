@@ -10,8 +10,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
+
+from dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
@@ -45,6 +47,7 @@ async def list_alerts(
     limit: int = Query(100, ge=1, le=1000),
     severity: Optional[str] = Query(None),
     since: Optional[float] = Query(None),
+    user: dict = Depends(get_current_user),
 ) -> list[AlertOut]:
     """Return recent alerts, newest first."""
     if _store is None:
@@ -64,7 +67,7 @@ async def list_alerts(
 
 
 @router.get("/{alert_id}", response_model=AlertOut)
-async def get_alert(alert_id: str) -> AlertOut:
+async def get_alert(alert_id: str, user: dict = Depends(get_current_user)) -> AlertOut:
     """Return a single alert by ID."""
     if _store is None:
         raise HTTPException(503, "Alert store not initialized")
@@ -84,6 +87,7 @@ class FalsePositiveRequest(BaseModel):
 async def mark_false_positive(
     alert_id: str,
     body: FalsePositiveRequest,
+    user: dict = Depends(get_current_user),
 ) -> dict:
     """Mark an alert as a false positive and reduce detector weights."""
     if _arbiter is None:

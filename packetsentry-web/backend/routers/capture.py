@@ -10,8 +10,10 @@ import asyncio
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
+from dependencies import require_admin
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/capture", tags=["capture"])
@@ -33,7 +35,7 @@ class StartRequest(BaseModel):
 
 
 @router.post("/start")
-async def start_capture(body: StartRequest) -> dict:
+async def start_capture(body: StartRequest, user: dict = Depends(require_admin)) -> dict:
     """Start live packet capture on the specified interface."""
     global _capture_task
     if _pipeline is None:
@@ -49,7 +51,7 @@ async def start_capture(body: StartRequest) -> dict:
 
 
 @router.post("/stop")
-async def stop_capture() -> dict:
+async def stop_capture(user: dict = Depends(require_admin)) -> dict:
     """Stop live packet capture."""
     global _capture_task
     if _capture_task and not _capture_task.done():
