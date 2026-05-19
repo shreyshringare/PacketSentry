@@ -3,11 +3,74 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #f9fafb;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  background-color: #C0C0C0;
 }
 
 .font-mono-ip {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
+}
+
+/* CRT scanline overlay — apply to packet stream container */
+.crt-scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.crt-scanlines::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Terminal blinking cursor — apply to empty-state elements */
+.terminal-cursor::after {
+  content: " _";
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Flat analog fader slider — apply to range inputs in Settings */
+.fader-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #000;
+  outline: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+.fader-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 20px;
+  background: #000;
+  cursor: pointer;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+.fader-input::-webkit-slider-thumb:hover {
+  background: #00FF41;
+}
+.fader-input::-moz-range-thumb {
+  width: 12px;
+  height: 20px;
+  background: #000;
+  cursor: pointer;
+  border: 2px solid #000;
+  border-radius: 0;
 }
