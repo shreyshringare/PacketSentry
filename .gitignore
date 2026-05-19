@@ -38,6 +38,11 @@ coverage.xml
 data/nslkdd/
 data/*.pcap
 
+# Evaluation results and notebooks
+results/*.png
+results/*.json
+notebooks/.ipynb_checkpoints/
+
 # Models (large binary files — track with Git LFS or download separately)
 # Uncomment below if models are too large for GitHub:
 # models/*.json
@@ -55,3 +60,4 @@ data/chroma/
 
 # Logs
 *.log
+.gstack/
