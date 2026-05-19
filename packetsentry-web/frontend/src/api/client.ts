@@ -1,20 +1,43 @@
+// packetsentry-web/frontend/src/api/client.ts
+import { useAuthStore } from "../store/authStore";
+
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
+  const token = useAuthStore.getState().token;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  const resp = await fetch(`${BASE}${path}`, { headers, ...init });
+  if (resp.status === 401) {
+    useAuthStore.getState().logout();
+    window.location.href = "/";
+    throw new Error("Unauthenticated");
+  }
   if (!resp.ok) throw new Error(`API ${path} → ${resp.status}`);
   return resp.json() as Promise<T>;
 }
 
 export const api = {
+  // Auth
+  login: (password: string) =>
+    apiFetch<{ access_token: string; role: string }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+  demoToken: () =>
+    apiFetch<{ access_token: string; role: string }>("/auth/demo-token"),
+
+  // Alerts (real or demo)
   getAlerts: (params?: { limit?: number; severity?: string }) => {
     const qs = new URLSearchParams();
     if (params?.limit) qs.set("limit", String(params.limit));
     if (params?.severity) qs.set("severity", params.severity);
-    return apiFetch<unknown[]>(`/api/alerts?${qs}`);
+    const isDemo = useAuthStore.getState().isDemo;
+    return apiFetch<unknown[]>(
+      isDemo ? "/api/demo/alerts" : `/api/alerts?${qs}`
+    );
   },
 
   getAlert: (id: string) => apiFetch<unknown>(`/api/alerts/${id}`),
@@ -25,6 +48,14 @@ export const api = {
       body: JSON.stringify({ detectors }),
     }),
 
+  // Stats (real or demo)
+  getStats: () => {
+    const isDemo = useAuthStore.getState().isDemo;
+    return apiFetch<Record<string, number>>(
+      isDemo ? "/api/demo/stats" : "/api/stats"
+    );
+  },
+
   startCapture: (iface: string, bpfFilter: string) =>
     apiFetch<{ ok: boolean }>("/api/capture/start", {
       method: "POST",
@@ -33,8 +64,6 @@ export const api = {
 
   stopCapture: () =>
     apiFetch<{ ok: boolean }>("/api/capture/stop", { method: "POST" }),
-
-  getStats: () => apiFetch<Record<string, number>>("/api/stats"),
 
   getActiveFlows: () => apiFetch<unknown[]>("/api/flows/active"),
 
