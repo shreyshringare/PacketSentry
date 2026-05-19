@@ -281,11 +281,30 @@ sudo packetsentry live --interface eth0
 packetsentry alerts --last 50
 ```
 
+### Red-Team Posture Validation (Simulator)
+
+Verify the end-to-end security pipeline (Gate 1 Rules & Gate 2 ML Ensemble) by running the local attack traffic simulator directly against your interface:
+
+```bash
+# Execute red-team simulator (triggers SQLi, path traversals, SYN Floods, & volume spikes)
+./scripts/generate_attacks.sh
+```
+
 ## Web Dashboard (Phase 2)
 
-React 18 + FastAPI dashboard with live WebSocket streaming, SHAP waterfall, and 7-model ensemble visualization.
+A rugged, high-contrast **Stark Industries Cyber-Industrial Neo-Brutalist Dashboard** (built with React 19 + Vite + Tailwind CSS + FastAPI) featuring live WebSocket streaming, instant rule enforcement, and visual ensemble explanation.
 
-### Quick start
+### 🎨 Design Aesthetic & Styling
+* **Militaristic Utilitarianism:** Uses stark `#C0C0C0` (retro industrial brushed steel) backgrounds, sharp solid black borders (`border-2 border-black`), and flat offset neo-brutalist shadows (`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`).
+* **Phosphor CRT Stream:** Custom scanline filter overlay (`crt-scanlines`) mimicking physical hardware terminal feeds with phosphor-green highlights (`#00FF41`).
+* **No Smooth Delays:** Snappy, immediate feedback transitions with strict monospace typography (`font-mono`) for all packet logs and network dimensions.
+
+### ⚡ Hybrid Dual-Gate Architecture
+* **Gate 1: Deterministic Filter (`signatures/rules.yaml`):** An high-speed Multi-Pattern Aho-Corasick engine checks payloads instantly. Matches bypass the costly ML prediction models with 100% mathematical certainty, saving server cycles.
+* **Gate 2: Probabilistic Ensemble:** Unmatched packets are forwarded to the 7-model ML pipeline (XGBoost, GNN, Transformer AE, etc.).
+* **Split-Enforcement Stats:** The dashboard explicitly separates **Gate 1 Rules Blocks** from **Gate 2 Probabilistic Anomalies** in real-time.
+
+### Quick Start
 
 **With Docker:**
 ```bash
@@ -307,10 +326,10 @@ npm install && npm run dev
 ```
 
 ### Screens
-- **Overview** — 4 stat cards, live flow table, 7-model ensemble bars, alert feed
-- **Live Capture** — packet stream (react-window virtual scroll), polar threat radar, throughput chart
-- **Alert Detail** — SHAP waterfall (why did the ensemble fire?), ChromaDB similarity search
-- **Settings** — ensemble weight sliders, alert thresholds, capture config
+- **Overview** — 4 co-branded stat cards (Gate 1 Rules vs Gate 2 ML counts), active flow grids, 7-model weighted ensemble panel, alert feed.
+- **Live Capture** — terminal control bar (`root@packetsentry:~$`), custom console dropdown, phosphor virtual scroll packet stream, polar threat radar, throughput chart.
+- **Alert Detail** — SHAP explanation waterfall (satisfying GDPR "right to explanation"), ChromaDB vector similarity search.
+- **Settings** — control panel sliders, alert thresholds, YAML signature files.
 
 ### Benchmark Aho-Corasick vs Regex
 
