@@ -21,7 +21,7 @@ function AppContent() {
   const activeScreen = useUIStore((s) => s.activeScreen);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#C0C0C0]">
       <TopNav />
       {activeScreen === "overview" && <Overview />}
       {activeScreen === "live" && <LiveCapture />}
