@@ -1,10 +1,15 @@
 """Typer CLI entrypoint.
 
 Commands:
-  packetsentry live     — Start live capture with TUI dashboard
-  packetsentry replay   — Replay a PCAP through the pipeline
-  packetsentry alerts   — View alert history from DuckDB
-  packetsentry stats    — Show pipeline statistics
+  packetsentry live      — Start live capture with TUI dashboard (--no-tui for headless JSON)
+  packetsentry replay    — Replay a PCAP through the pipeline
+  packetsentry alerts    — View alert history from DuckDB (--severity, --output)
+  packetsentry bench     — Benchmark Aho-Corasick vs regex
+  packetsentry serve     — Start the FastAPI web backend
+  packetsentry status    — Show pipeline statistics
+  packetsentry explain   — Show SHAP feature attribution for an alert
+  packetsentry similar   — Find similar past alerts via ChromaDB
+  packetsentry clusters  — Show attack family clusters from ChromaDB
 """
 
 import json
@@ -26,16 +31,34 @@ console = Console()
 @app.command()
 def live(
     interface: str = typer.Option("Wi-Fi", help="Network interface to capture on."),
+    no_tui: bool = typer.Option(False, "--no-tui", help="Run headless, log alerts as JSON to stdout."),
 ):
-    """Start live packet capture with the real-time TUI dashboard."""
+    """Start live packet capture. Use --no-tui for headless JSON output."""
     from packetsentry.capture.pipeline import DetectionPipeline
     from packetsentry.capture.live import start_live_capture
-    from packetsentry.tui.dashboard import PacketSentryApp
 
     pipeline = DetectionPipeline()
     stop_event = threading.Event()
 
-    # Start capture in background thread
+    if no_tui:
+        def _on_alert(result):
+            import time
+            print(json.dumps({
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "confidence": round(result.confidence, 4),
+                "scores": {k: round(v, 4) for k, v in result.scores.items()},
+            }), flush=True)
+
+        pipeline._alert_callback = _on_alert  # type: ignore[attr-defined]
+        console.print(f"[dim]Headless capture on {interface}. Ctrl+C to stop.[/dim]")
+        try:
+            start_live_capture(interface, pipeline, stop_event=stop_event)
+        except KeyboardInterrupt:
+            stop_event.set()
+        return
+
+    from packetsentry.tui.dashboard import PacketSentryApp
+
     capture_thread = threading.Thread(
         target=start_live_capture,
         args=(interface, pipeline),
@@ -43,12 +66,8 @@ def live(
         daemon=True,
     )
     capture_thread.start()
-
-    # Run TUI in main thread
     tui = PacketSentryApp(pipeline=pipeline, stop_event=stop_event)
     tui.run()
-
-    # When TUI exits, stop capture
     stop_event.set()
     capture_thread.join(timeout=3.0)
     console.print("[green]PacketSentry stopped.[/green]")
@@ -102,6 +121,8 @@ def replay(
 @app.command()
 def alerts(
     last: int = typer.Option(50, help="Number of recent alerts to show."),
+    severity: str = typer.Option("", help="Filter by severity: CRITICAL, HIGH, MED, LOW."),
+    output: str = typer.Option("table", help="Output format: table or json."),
 ):
     """View alert history from DuckDB."""
     from packetsentry.alerts.store import DuckDBAlertStore
@@ -109,16 +130,27 @@ def alerts(
     store = DuckDBAlertStore()
     rows = store.get_recent_alerts(limit=last)
 
+    if severity:
+        rows = [r for r in rows if r.get("severity", "").upper() == severity.upper()]
+
     if not rows:
-        console.print("[yellow]No alerts found.[/yellow]")
+        if output == "json":
+            print("[]")
+        else:
+            console.print("[yellow]No alerts found.[/yellow]")
         return
 
-    table = Table(title=f"Recent Alerts (last {last})")
+    if output == "json":
+        print(json.dumps(rows, indent=2, default=str))
+        return
+
+    table = Table(title=f"Recent Alerts (last {last})" + (f" [{severity}]" if severity else ""))
     table.add_column("Time", style="dim")
     table.add_column("Severity", style="bold")
     table.add_column("Source IP")
     table.add_column("Dest", style="cyan")
     table.add_column("Conf", style="green")
+    table.add_column("Rule")
 
     severity_colors = {"CRITICAL": "red", "HIGH": "yellow", "MED": "cyan", "LOW": "white"}
     for row in rows:
@@ -130,8 +162,8 @@ def alerts(
             str(row.get("src_ip", "")),
             f"{row.get('dst_ip', '')}:{row.get('dst_port', '')}",
             f"{row.get('confidence', 0):.2f}",
+            str(row.get("rule", "")),
         )
-
     console.print(table)
 
 
@@ -179,4 +211,157 @@ def bench(
     table.add_column("Speedup", style="yellow")
     table.add_row("Aho-Corasick", f"{ac_time:.3f}s", str(len(ac_matches)), "—")
     table.add_row("Regex", f"{re_time:.3f}s", str(len(re_matches)), f"{re_time/max(ac_time,1e-9):.1f}×")
+    console.print(table)
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", help="Bind host."),
+    port: int = typer.Option(8000, help="Bind port."),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code change."),
+):
+    """Start the PacketSentry web API backend (FastAPI + WebSocket)."""
+    try:
+        import uvicorn
+    except ImportError:
+        console.print("[red]uvicorn not installed. Run: pip install uvicorn[standard][/red]")
+        raise typer.Exit(1)
+
+    import os, sys
+    backend_dir = os.path.join(os.path.dirname(__file__), "..", "packetsentry-web", "backend")
+    sys.path.insert(0, backend_dir)
+    os.chdir(backend_dir)
+
+    console.print(f"[bold]Starting PacketSentry API[/bold] on {host}:{port}")
+    uvicorn.run("main:app", host=host, port=port, reload=reload)
+
+
+@app.command()
+def status(
+    output: str = typer.Option("table", help="Output format: table or json."),
+):
+    """Show current pipeline statistics."""
+    from packetsentry.alerts.store import DuckDBAlertStore
+
+    store = DuckDBAlertStore()
+
+    stats = {
+        "alerts_in_db": len(store.get_recent_alerts(limit=10000)),
+        "db_path": "data/alerts.duckdb",
+        "status": "ready",
+    }
+
+    if output == "json":
+        print(json.dumps(stats, indent=2))
+        return
+
+    table = Table(title="PacketSentry Status")
+    table.add_column("Key", style="cyan")
+    table.add_column("Value", style="green")
+    for k, v in stats.items():
+        table.add_row(k, str(v))
+    console.print(table)
+
+
+@app.command()
+def explain(
+    alert_id: str = typer.Argument(..., help="Alert ID to explain."),
+):
+    """Show SHAP feature attribution for an alert."""
+    from packetsentry.alerts.store import DuckDBAlertStore
+
+    store = DuckDBAlertStore()
+    rows = store.get_recent_alerts(limit=10000)
+    match = next((r for r in rows if r.get("alert_id") == alert_id), None)
+
+    if not match:
+        console.print(f"[red]Alert {alert_id!r} not found.[/red]")
+        raise typer.Exit(1)
+
+    shap_raw = match.get("shap_explanation", "{}")
+    try:
+        shap: dict = json.loads(shap_raw) if isinstance(shap_raw, str) else shap_raw
+    except Exception:
+        shap = {}
+
+    table = Table(title=f"SHAP Explanation — {alert_id}")
+    table.add_column("Feature", style="cyan")
+    table.add_column("SHAP Value", style="green")
+    table.add_column("Direction")
+
+    for feat, val in sorted(shap.items(), key=lambda x: abs(float(x[1])), reverse=True)[:10]:
+        v = float(val)
+        direction = "[red]↑ attack[/red]" if v > 0 else "[green]↓ normal[/green]"
+        table.add_row(feat, f"{v:+.4f}", direction)
+
+    console.print(table)
+    console.print(f"\nSeverity: [bold]{match.get('severity')}[/bold]  Confidence: {match.get('confidence', 0):.2f}")
+
+
+@app.command()
+def similar(
+    alert_id: str = typer.Argument(..., help="Alert ID to find similar alerts for."),
+    top: int = typer.Option(5, help="Number of similar alerts to return."),
+):
+    """Find similar past alerts using ChromaDB vector similarity."""
+    from packetsentry.alerts.store import DuckDBAlertStore
+    from packetsentry.storage.vector_store import ChromaStore
+
+    store = DuckDBAlertStore()
+    vector_store = ChromaStore()
+
+    rows = store.get_recent_alerts(limit=10000)
+    match = next((r for r in rows if r.get("alert_id") == alert_id), None)
+    if not match:
+        console.print(f"[red]Alert {alert_id!r} not found.[/red]")
+        raise typer.Exit(1)
+
+    embedding_blob = match.get("embedding")
+    if not embedding_blob:
+        console.print("[yellow]No embedding stored for this alert.[/yellow]")
+        return
+
+    import numpy as np
+    embedding = np.frombuffer(embedding_blob, dtype=np.float32)
+    results = vector_store.find_similar(embedding, n=top)
+
+    table = Table(title=f"Top {top} Similar Alerts")
+    table.add_column("ID", style="dim")
+    table.add_column("Similarity", style="green")
+    table.add_column("Severity", style="bold")
+    table.add_column("Src IP")
+    table.add_column("Time")
+
+    for r in results:
+        meta = r.get("metadata", {})
+        dist = r.get("distance", 1.0)
+        similarity = f"{(1 - dist) * 100:.1f}%"
+        table.add_row(
+            r.get("id", "")[:12],
+            similarity,
+            meta.get("severity", "?"),
+            meta.get("src_ip", "?"),
+            meta.get("timestamp", "?"),
+        )
+    console.print(table)
+
+
+@app.command()
+def clusters():
+    """Show attack family clusters from ChromaDB vector store."""
+    from packetsentry.storage.vector_store import ChromaStore
+
+    vector_store = ChromaStore()
+    summary = vector_store.cluster_summary()
+
+    if not summary:
+        console.print("[yellow]No clusters found. Run live capture to populate the vector store.[/yellow]")
+        return
+
+    table = Table(title="Attack Family Clusters (ChromaDB)")
+    table.add_column("Attack Type", style="cyan")
+    table.add_column("Count", style="green")
+
+    for attack_type, count in sorted(summary.items(), key=lambda x: x[1], reverse=True):
+        table.add_row(attack_type, str(count))
     console.print(table)
