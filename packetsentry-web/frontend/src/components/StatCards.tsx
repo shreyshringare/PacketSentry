@@ -25,25 +25,16 @@ function Card({
       ? "text-green-600"
       : "text-gray-900";
 
-  const iconBg =
-    accent === "red"
-      ? "bg-red-50"
-      : accent === "amber"
-      ? "bg-amber-50"
-      : accent === "green"
-      ? "bg-green-50"
-      : "bg-gray-50";
-
   return (
-    <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-none border-2 border-black px-4 py-3 flex items-center justify-between shadow-brutalist">
       <div>
-        <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
-        <div className={`text-2xl font-bold mt-0.5 ${valCls}`}>{value}</div>
-        {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+        <div className="text-xs text-gray-500 uppercase tracking-wide font-bold">{label}</div>
+        <div className={`text-3xl font-black mt-0.5 ${valCls}`}>{value}</div>
+        {sub && <div className="text-xs text-gray-400 mt-0.5 font-mono">{sub}</div>}
       </div>
       {Icon && (
-        <div className={`p-2 ${iconBg} rounded-lg shrink-0`}>
-          <Icon size={24} className={valCls} />
+        <div className="p-2 bg-black rounded-none shrink-0">
+          <Icon size={24} className="text-white" />
         </div>
       )}
     </div>
