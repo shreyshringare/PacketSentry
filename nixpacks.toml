@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["python311", "libpcap"]
+
+[phases.install]
+cmds = [
+  "pip install --upgrade pip",
+  "pip install -e .",
+  "pip install -r packetsentry-web/backend/requirements.txt"
+]
+
+[start]
+cmd = "cd packetsentry-web/backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
