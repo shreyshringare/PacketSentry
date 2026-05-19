@@ -55,6 +55,9 @@ data/alerts.duckdb.wal
 # ChromaDB runtime data
 data/chroma/
 
+# Web App Backend runtime data
+packetsentry-web/backend/data/
+
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
