@@ -7,15 +7,20 @@ RUN apt-get update && apt-get install -y \
     libpcap-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install packetsentry from repo root
-COPY ../../pyproject.toml ../../packetsentry/ ./packetsentry/
-RUN pip install --no-cache-dir -e . 2>/dev/null || true
+# Copy core python package and install it
+COPY pyproject.toml ./
+COPY packetsentry/ ./packetsentry/
+RUN pip install --no-cache-dir -e .
 
-# Install backend deps
-COPY requirements.txt .
+# Copy models from repo root to where os.chdir("../../") from /app will look (the container root /models)
+COPY models/ /models/
+
+# Copy backend-specific files and install dependencies
+COPY packetsentry-web/backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the backend application source code
+COPY packetsentry-web/backend/ .
 
 EXPOSE 8000
 
