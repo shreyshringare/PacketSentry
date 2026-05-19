@@ -344,7 +344,42 @@ packetsentry/
 
 ---
 
+## 📊 Benchmark Results — NSL-KDD (22,544 test samples)
+
+| Model | F1 | Precision | Recall | ROC-AUC |
+|---|---|---|---|---|
+| XGBoost + SHAP | 0.784 | — | — | 0.950 |
+| Random Forest | 0.744 | — | — | 0.965 |
+| Isolation Forest *(unsupervised)* | 0.795 | — | — | 0.925 |
+| Z-Score *(statistical)* | 0.364 | — | — | 0.847 |
+| Transformer AE *(temporal)* | — | — | — | — |
+| GNN / GraphSAGE | topology-only* | — | — | — |
+| Aho-Corasick | signature-only* | — | — | — |
+
+> *GNN requires a live network graph; Aho-Corasick requires raw packet payloads. Both contribute to the live ensemble but are not scored against per-flow datasets.*
+>
+> Reproduce: `python scripts/evaluate_all.py --dataset data/nslkdd/ --output results/`
+
+### SHAP Feature Attribution
+
+Every alert ships with a SHAP explanation. Top features driving attack classification:
+
+![SHAP Beeswarm](docs/shap_beeswarm.png)
+
+### Attack Class Separation (UMAP)
+
+64-dim flow embeddings projected to 2D — distinct clusters for DoS, Probe, R2L, U2R:
+
+![UMAP Projection](docs/embeddings_umap.png)
+
+### Model Comparison
+
+![Model Comparison](docs/model_comparison.png)
+
+---
+
 ## ⚙️ Tech Stack
+
 
 | Layer | Technology | Why This Choice |
 |-------|-----------|----------------|

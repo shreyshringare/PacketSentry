@@ -60,4 +60,9 @@ data/chroma/
 
 # Logs
 *.log
+
+# Evaluation outputs (reproducible — not committed)
+results/*.png
+results/*.json
+notebooks/.ipynb_checkpoints/
 .gstack/
