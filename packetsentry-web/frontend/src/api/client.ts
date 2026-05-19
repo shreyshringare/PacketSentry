@@ -1,7 +1,7 @@
 // packetsentry-web/frontend/src/api/client.ts
 import { useAuthStore } from "../store/authStore";
 
-const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token = useAuthStore.getState().token;
