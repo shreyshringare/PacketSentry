@@ -34,10 +34,10 @@ class StatsBar(Static):
 
     def render(self) -> str:
         return (
-            f" 📦 Packets: [bold cyan]{self.packets:,}[/] │ "
-            f"🔀 Flows: [bold green]{self.flows:,}[/] │ "
-            f"🚨 Alerts: [bold red]{self.alerts:,}[/] │ "
-            f"⚡ {self.pps:.0f} pps"
+            f" [>] PKT: [bold #00FF41]{self.packets:,}[/] | "
+            f"FLW: [bold #00FF41]{self.flows:,}[/] | "
+            f"ALT: [bold red]{self.alerts:,}[/] | "
+            f"[#00FF41]{self.pps:.0f} pps[/#00FF41]"
         )
 
 
@@ -47,7 +47,8 @@ class AlertPanel(Static):
     DEFAULT_CSS = """
     AlertPanel {
         height: 100%;
-        border: solid $accent;
+        border: heavy #00FF41;
+        background: #1a1a1a;
         padding: 0 1;
         overflow-y: auto;
     }
@@ -59,13 +60,13 @@ class AlertPanel(Static):
         self._max_lines = 200
 
     def add_alert(self, severity: str, confidence: float, src: str, dst: str, port: int) -> None:
-        icons = {"CRITICAL": "🔴", "HIGH": "🟠", "MED": "🟡", "LOW": "⚪"}
-        colors = {"CRITICAL": "red", "HIGH": "yellow", "MED": "cyan", "LOW": "dim"}
-        icon = icons.get(severity, "❓")
+        tags = {"CRITICAL": "[CRIT]", "HIGH": "[HIGH]", "MED": "[MED]", "LOW": "[LOW]"}
+        colors = {"CRITICAL": "#FF0000", "HIGH": "#FF8C00", "MED": "#00FF41", "LOW": "white"}
+        tag = tags.get(severity, "[???]")
         color = colors.get(severity, "white")
         ts = time.strftime("%H:%M:%S")
 
-        line = f"[{color}]{icon} {ts} {severity:<8} {src} → {dst}:{port}  conf={confidence:.2f}[/{color}]"
+        line = f"[{color}]{tag} {ts} {severity:<8} {src} -> {dst}:{port}  conf={confidence:.2f}[/{color}]"
         self._lines.append(line)
         if len(self._lines) > self._max_lines:
             self._lines = self._lines[-self._max_lines:]
@@ -83,13 +84,14 @@ class PacketSentryApp(App):
     CSS = """
     Screen {
         layout: vertical;
+        background: #1a1a1a;
     }
     #stats-bar {
         dock: top;
         height: 3;
         padding: 0 2;
-        background: $surface;
-        border-bottom: solid $accent;
+        background: #000000;
+        border-bottom: heavy #00FF41;
     }
     #main-container {
         height: 1fr;
@@ -97,7 +99,7 @@ class PacketSentryApp(App):
     #flow-table-container {
         width: 2fr;
         height: 100%;
-        border: solid $primary;
+        border: heavy white;
     }
     #alert-container {
         width: 1fr;
@@ -105,6 +107,7 @@ class PacketSentryApp(App):
     }
     DataTable {
         height: 100%;
+        background: #1a1a1a;
     }
     """
 
@@ -113,8 +116,8 @@ class PacketSentryApp(App):
         ("p", "toggle_pause", "Pause/Resume"),
     ]
 
-    TITLE = "PacketSentry NIDS"
-    SUB_TITLE = "7-Model Ensemble • Real-Time Detection"
+    TITLE = "PACKETSENTRY // NIDS"
+    SUB_TITLE = "7-MODEL ENSEMBLE :: REAL-TIME DETECTION"
 
     def __init__(
         self,
@@ -186,7 +189,7 @@ class PacketSentryApp(App):
 
     def action_toggle_pause(self) -> None:
         self._paused = not self._paused
-        self.sub_title = "PAUSED" if self._paused else "7-Model Ensemble • Real-Time Detection"
+        self.sub_title = ">> PAUSED <<" if self._paused else "7-MODEL ENSEMBLE :: REAL-TIME DETECTION"
 
     def action_quit(self) -> None:
         self._stop_event.set()
