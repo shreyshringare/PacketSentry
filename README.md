@@ -20,6 +20,12 @@
   <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-76%25-yellow?style=for-the-badge" alt="Coverage"></a>
 </p>
 
+## 🌍 Live Deployment
+
+**Frontend:** [Add Vercel URL here]  
+**Backend API:** [Add Railway URL here]  
+*Note: Default admin password is `admin` (or as configured).*
+
 <p align="center">
   <a href="#-architecture">Architecture</a> •
   <a href="#-7-model-ensemble">Ensemble</a> •
