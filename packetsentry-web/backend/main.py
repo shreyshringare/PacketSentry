@@ -19,6 +19,7 @@ from ws_manager import WebSocketManager
 from routers import alerts as alerts_router
 from routers import auth as auth_router
 from routers import capture as capture_router
+from routers import demo as demo_router
 from routers import stats as stats_router
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -158,6 +159,7 @@ app.include_router(alerts_router.router)
 app.include_router(capture_router.router)
 app.include_router(stats_router.router)
 app.include_router(auth_router.router)
+app.include_router(demo_router.router)
 
 
 # -----------------------------------------------------------------------
