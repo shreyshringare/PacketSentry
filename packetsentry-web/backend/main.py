@@ -11,9 +11,13 @@ from __future__ import annotations
 
 import logging
 import os
+import time as _time
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from ws_manager import WebSocketManager
 from routers import alerts as alerts_router
@@ -25,11 +29,17 @@ from routers import stats as stats_router
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
+_START_TIME = _time.time()
+
 app = FastAPI(
     title="PacketSentry API",
     description="7-model ensemble NIDS — REST + WebSocket API",
     version="1.0.0",
 )
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -132,6 +142,28 @@ async def startup() -> None:
     auth_router.set_admin_password(admin_password)
 
     logger.info("PacketSentry API started — all components ready")
+
+
+# -----------------------------------------------------------------------
+# Health check
+# -----------------------------------------------------------------------
+
+@app.get("/health")
+async def health() -> dict:
+    """Health check — no auth required."""
+    from packetsentry.alerts.store import DuckDBAlertStore
+    try:
+        store = DuckDBAlertStore()
+        alert_count = len(store.get_recent_alerts(limit=1))
+        db_status = "ok"
+    except Exception:
+        alert_count = 0
+        db_status = "error"
+    return {
+        "status": "ok",
+        "uptime_seconds": round(_time.time() - _START_TIME),
+        "db": db_status,
+    }
 
 
 # -----------------------------------------------------------------------

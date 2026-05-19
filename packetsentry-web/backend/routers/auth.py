@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from auth import create_access_token, hash_password, verify_password
 from dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 # Admin credentials from environment
 _ADMIN_PASSWORD_HASH: str = ""
@@ -33,7 +36,8 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest) -> TokenResponse:
+@limiter.limit("5/minute")
+def login(request: Request, body: LoginRequest) -> TokenResponse:
     """Admin login. Password from PACKETSENTRY_ADMIN_PASSWORD env var."""
     if not _ADMIN_PASSWORD_HASH:
         raise HTTPException(status_code=500, detail="Auth not configured")
@@ -47,7 +51,8 @@ def login(body: LoginRequest) -> TokenResponse:
 
 
 @router.get("/demo-token", response_model=TokenResponse)
-def demo_token() -> TokenResponse:
+@limiter.limit("30/minute")
+def demo_token(request: Request) -> TokenResponse:
     """Issue a read-only demo JWT (no password required)."""
     token = create_access_token(sub="demo", role="demo")
     return TokenResponse(access_token=token, role="demo")
