@@ -1,4 +1,4 @@
-import { useAlertStore, type Flow } from "../store/alertStore";
+import { useAlertStore } from "../store/alertStore";
 
 const SEVERITY_CLS: Record<string, string> = {
   CRITICAL: "bg-red-100 text-red-700",
@@ -28,7 +28,6 @@ function ScoreBar({ score }: { score: number }) {
 
 export function FlowTable() {
   const flows = useAlertStore((s) => s.flows);
-  const setSelectedAlert = useAlertStore((s) => s.setSelectedAlert);
 
   return (
     <div className="overflow-auto">

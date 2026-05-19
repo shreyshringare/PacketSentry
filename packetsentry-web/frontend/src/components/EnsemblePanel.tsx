@@ -1,5 +1,4 @@
 import { useCaptureStore } from "../store/captureStore";
-import { useAlertStore } from "../store/alertStore";
 
 const MODEL_CONFIG = [
   { key: "aho_corasick", label: "Aho-Corasick", color: "#7C3AED" },

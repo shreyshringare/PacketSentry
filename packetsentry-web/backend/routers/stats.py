@@ -72,8 +72,25 @@ async def get_similar(
         return {"similar_alerts": []}
 
     try:
-        results = _vector_store.query_similar(alert_id=alert_id, top_k=top)
-        return {"similar_alerts": results}
+        results = _vector_store._collection.get(ids=[alert_id], include=["embeddings"])
+        if not results.get("embeddings"):
+            return {"similar_alerts": []}
+        
+        import numpy as np
+        matches = _vector_store.find_similar(np.array(results["embeddings"][0]), top_k=top+1)
+        similar = [m for m in matches if m["alert_id"] != alert_id][:top]
+        
+        formatted = []
+        for m in similar:
+             formatted.append({
+                  "alert_id": m["alert_id"],
+                  "similarity": max(0.0, 1.0 - m["distance"]),
+                  "rule": m["metadata"].get("rule", "Unknown"),
+                  "severity": m["metadata"].get("severity", "LOW"),
+                  "src_ip": m["metadata"].get("src_ip", "0.0.0.0"),
+                  "timestamp": m["metadata"].get("timestamp", "")
+             })
+        return {"similar_alerts": formatted}
     except Exception as exc:
         logger.warning("ChromaDB similarity query failed: %s", exc)
         return {"similar_alerts": []}

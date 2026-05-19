@@ -4,11 +4,9 @@ import { EnsemblePanel } from "../components/EnsemblePanel";
 import { AlertFeed } from "../components/AlertFeed";
 import { ThroughputChart } from "../components/ThroughputChart";
 import { useAlertStore } from "../store/alertStore";
-import { useCaptureStore } from "../store/captureStore";
 
 export function Overview() {
   const selectedAlert = useAlertStore((s) => s.selectedAlert);
-  const stats = useCaptureStore((s) => s.stats);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">

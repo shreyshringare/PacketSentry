@@ -58,14 +58,14 @@ async def startup() -> None:
     from packetsentry.capture.pipeline import DetectionPipeline
     from packetsentry.alerts.store import DuckDBAlertStore
     from packetsentry.detection.ensemble import EnsembleArbiter
-    from packetsentry.storage.vector_store import ChromaDBVectorStore
+    from packetsentry.storage.vector_store import ChromaStore
 
     db_path = os.environ.get("DUCKDB_PATH", "data/alerts.duckdb")
     chroma_path = os.environ.get("CHROMA_PATH", "data/chroma")
 
     _store = DuckDBAlertStore(db_path=db_path)
     _arbiter = EnsembleArbiter()
-    _vector_store = ChromaDBVectorStore(path=chroma_path)
+    _vector_store = ChromaStore(persist_directory=chroma_path)
 
     def _alert_callback(result, features, src_ip, dst_ip, dst_port):
         """Called by DetectionPipeline on every alert — stores + broadcasts."""

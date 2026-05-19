@@ -15,7 +15,6 @@ export function LiveCapture() {
   const [activeProtos, setActiveProtos] = useState<Set<string>>(new Set());
   const selectedAlert = useAlertStore((s) => s.selectedAlert);
   const stats = useCaptureStore((s) => s.stats);
-  const [elapsed, setElapsed] = useState(0);
 
   const toggleProto = (p: string) => {
     setActiveProtos((prev) => {

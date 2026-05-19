@@ -1,12 +1,17 @@
 import { useRef } from "react";
-import { FixedSizeList, type ListChildComponentProps } from "react-window";
-import { useCaptureStore, type PacketEvent } from "../store/captureStore";
+import { List } from "react-window";
+import { useCaptureStore } from "../store/captureStore";
 
 const ITEM_HEIGHT = 22;
 const MAX_VISIBLE = 20;
 
-function Row({ index, style, data }: ListChildComponentProps<PacketEvent[]>) {
-  const pkt = data[index];
+interface RowDataProps {
+  packets: any[];
+}
+
+function Row({ index, style, packets }: any) {
+  const pkt = packets[index];
+  if (!pkt) return null;
   const rowCls = pkt.flagged
     ? "text-red-500"
     : pkt.flow_score >= 0.5
@@ -26,38 +31,37 @@ function Row({ index, style, data }: ListChildComponentProps<PacketEvent[]>) {
       <span className="w-32 truncate">{pkt.dst}</span>
       <span className="w-10">{pkt.proto}</span>
       <span className="w-12 text-right">{pkt.length}B</span>
-      {pkt.flags && <span className="text-[10px] bg-gray-100 px-1 rounded">{pkt.flags}</span>}
+      {pkt.flags && <span className="text-[10px] bg-gray-800 px-1 rounded text-gray-300">{pkt.flags}</span>}
     </div>
   );
 }
 
 export function PacketStream() {
   const packets = useCaptureStore((s) => s.packets);
-  const listRef = useRef<FixedSizeList>(null);
+  const listRef = useRef<any>(null);
 
   const height = Math.min(packets.length, MAX_VISIBLE) * ITEM_HEIGHT || ITEM_HEIGHT * 5;
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-900">
-      <div className="bg-gray-800 px-3 py-1.5 text-[10px] text-gray-400 uppercase tracking-wide">
-        Packet Stream — last {packets.length} packets
+    <div className="flex-1 min-h-0 bg-gray-900 border border-gray-800 rounded-lg p-2 overflow-hidden flex flex-col">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-800 text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
+        <span className="w-16">Time</span>
+        <span className="w-32">Source</span>
+        <span className="w-32">Destination</span>
+        <span className="w-10">Proto</span>
+        <span className="w-12 text-right">Length</span>
+        <span>Flags</span>
       </div>
-      {packets.length === 0 ? (
-        <div className="px-3 py-4 text-[11px] text-gray-500 font-mono">
-          Waiting for packets…
-        </div>
-      ) : (
-        <FixedSizeList
-          ref={listRef}
-          height={height}
-          itemCount={packets.length}
-          itemSize={ITEM_HEIGHT}
-          itemData={packets}
-          width="100%"
-        >
-          {Row}
-        </FixedSizeList>
-      )}
+      <div className="flex-1 overflow-hidden min-h-0 mt-2">
+        <List<RowDataProps>
+          style={{ height }}
+          rowCount={packets.length}
+          rowHeight={ITEM_HEIGHT}
+          rowComponent={Row}
+          rowProps={{ packets }}
+          listRef={listRef}
+        />
+      </div>
     </div>
   );
 }
