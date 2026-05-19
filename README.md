@@ -275,6 +275,37 @@ sudo packetsentry live --interface eth0
 packetsentry alerts --last 50
 ```
 
+## Web Dashboard (Phase 2)
+
+React 18 + FastAPI dashboard with live WebSocket streaming, SHAP waterfall, and 7-model ensemble visualization.
+
+### Quick start
+
+**With Docker:**
+```bash
+cd packetsentry-web
+docker-compose up
+```
+Dashboard: http://localhost:5173 | API: http://localhost:8000/docs
+
+**Without Docker:**
+```bash
+# Terminal 1 — backend
+cd packetsentry-web/backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+# Terminal 2 — frontend
+cd packetsentry-web/frontend
+npm install && npm run dev
+```
+
+### Screens
+- **Overview** — 4 stat cards, live flow table, 7-model ensemble bars, alert feed
+- **Live Capture** — packet stream (react-window virtual scroll), polar threat radar, throughput chart
+- **Alert Detail** — SHAP waterfall (why did the ensemble fire?), ChromaDB similarity search
+- **Settings** — ensemble weight sliders, alert thresholds, capture config
+
 ### Benchmark Aho-Corasick vs Regex
 
 ```bash
