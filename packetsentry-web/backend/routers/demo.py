@@ -13,10 +13,16 @@ router = APIRouter(prefix="/api/demo", tags=["demo"])
 
 _DEMO_DATA_PATH = Path(__file__).parent.parent / "data" / "demo_alerts.json"
 
+# Cache at import time — file is static, no need to re-read per request
+try:
+    with open(_DEMO_DATA_PATH) as _f:
+        _DEMO_ALERTS: list[dict] = json.load(_f)
+except (FileNotFoundError, json.JSONDecodeError):
+    _DEMO_ALERTS = []
+
 
 def _load_demo_alerts() -> list[dict]:
-    with open(_DEMO_DATA_PATH) as f:
-        return json.load(f)
+    return _DEMO_ALERTS
 
 
 def _require_demo_or_admin(user: dict = Depends(get_current_user)) -> dict:

@@ -14,17 +14,22 @@
 
 <p align="center">
   <a href="#-quick-start"><img src="https://img.shields.io/badge/python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
-  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-241%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
+  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-246%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
   <a href="#-7-model-ensemble"><img src="https://img.shields.io/badge/ensemble-7%20models-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="Models"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>
-  <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-76%25-yellow?style=for-the-badge" alt="Coverage"></a>
+  <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-70%25-yellow?style=for-the-badge" alt="Coverage"></a>
 </p>
 
-## 🌍 Live Deployment
+## 🌍 Live Demo
 
-**Frontend:** [Add Vercel URL here]  
-**Backend API:** [Add Railway URL here]  
-*Note: Default admin password is `admin` (or as configured).*
+| | URL |
+|---|---|
+| **Dashboard** | https://packetsentry.vercel.app ← replace with your Vercel URL |
+| **Backend API** | https://your-app.up.railway.app ← replace with your Railway URL |
+| **API Docs** | https://your-app.up.railway.app/docs |
+
+> Click **TRY DEMO** on the dashboard — no login required. Pre-recorded attack alerts with full SHAP attribution.  
+> Admin login available with credentials from the project owner.
 
 <p align="center">
   <a href="#-architecture">Architecture</a> •

@@ -57,6 +57,18 @@ class ChromaStore:
         except Exception as e:
             logger.error(f"Failed to store embedding for alert {alert_id}: {e}")
 
+    def get_embedding(self, alert_id: str) -> "np.ndarray | None":
+        """Return the stored embedding for alert_id, or None if not found."""
+        try:
+            results = self._collection.get(ids=[alert_id], include=["embeddings"])
+            embeddings = results.get("embeddings") or []
+            if not embeddings:
+                return None
+            return np.array(embeddings[0])
+        except Exception as exc:
+            logger.warning("get_embedding failed for %s: %s", alert_id, exc)
+            return None
+
     def find_similar(
         self, embedding: np.ndarray, top_k: int = 5
     ) -> list[dict[str, Any]]:

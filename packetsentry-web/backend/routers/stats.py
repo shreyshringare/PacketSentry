@@ -75,12 +75,11 @@ async def get_similar(
         return {"similar_alerts": []}
 
     try:
-        results = _vector_store._collection.get(ids=[alert_id], include=["embeddings"])
-        if not results.get("embeddings"):
+        embedding = _vector_store.get_embedding(alert_id)
+        if embedding is None:
             return {"similar_alerts": []}
-        
-        import numpy as np
-        matches = _vector_store.find_similar(np.array(results["embeddings"][0]), top_k=top+1)
+
+        matches = _vector_store.find_similar(embedding, top_k=top + 1)
         similar = [m for m in matches if m["alert_id"] != alert_id][:top]
         
         formatted = []

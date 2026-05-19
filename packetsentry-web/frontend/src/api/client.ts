@@ -11,8 +11,11 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   };
   const resp = await fetch(`${BASE}${path}`, { headers, ...init });
   if (resp.status === 401) {
-    useAuthStore.getState().logout();
-    window.location.href = "/";
+    const store = useAuthStore.getState();
+    if (store.isAuthenticated) {
+      store.logout();
+      window.location.href = "/";
+    }
     throw new Error("Unauthenticated");
   }
   if (!resp.ok) throw new Error(`API ${path} → ${resp.status}`);
