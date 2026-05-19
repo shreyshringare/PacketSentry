@@ -1,0 +1,62 @@
+[
+  {
+    "id": "demo-001",
+    "timestamp": "2026-05-19 14:23:01",
+    "severity": "CRITICAL",
+    "src_ip": "192.168.1.105",
+    "dst_ip": "10.0.0.1",
+    "dst_port": 80,
+    "confidence": 0.94,
+    "rule": "SYN Flood",
+    "detectors": ["aho_corasick", "xgboost", "gnn_detector"],
+    "shap_explanation": "{\"dst_bytes\": 0.42, \"serror_rate\": 0.31, \"same_srv_rate\": -0.18}"
+  },
+  {
+    "id": "demo-002",
+    "timestamp": "2026-05-19 14:25:44",
+    "severity": "HIGH",
+    "src_ip": "10.10.0.55",
+    "dst_ip": "192.168.1.1",
+    "dst_port": 22,
+    "confidence": 0.78,
+    "rule": "Port Scan",
+    "detectors": ["xgboost", "gnn_detector"],
+    "shap_explanation": "{\"dst_host_count\": 0.55, \"diff_srv_rate\": 0.28}"
+  },
+  {
+    "id": "demo-003",
+    "timestamp": "2026-05-19 14:31:12",
+    "severity": "HIGH",
+    "src_ip": "172.16.0.3",
+    "dst_ip": "8.8.8.8",
+    "dst_port": 53,
+    "confidence": 0.71,
+    "rule": "DNS Tunneling",
+    "detectors": ["aho_corasick", "transformer_ae"],
+    "shap_explanation": "{\"dst_bytes\": 0.38, \"packet_count\": 0.22}"
+  },
+  {
+    "id": "demo-004",
+    "timestamp": "2026-05-19 14:38:55",
+    "severity": "MED",
+    "src_ip": "192.168.1.200",
+    "dst_ip": "10.0.0.5",
+    "dst_port": 443,
+    "confidence": 0.58,
+    "rule": "Temporal Anomaly",
+    "detectors": ["transformer_ae", "zscore"],
+    "shap_explanation": "{\"bytes_per_second\": 0.29, \"packets_per_second\": 0.17}"
+  },
+  {
+    "id": "demo-005",
+    "timestamp": "2026-05-19 14:45:03",
+    "severity": "MED",
+    "src_ip": "10.0.0.20",
+    "dst_ip": "192.168.1.50",
+    "dst_port": 3389,
+    "confidence": 0.61,
+    "rule": "Brute Force",
+    "detectors": ["xgboost", "isolation_forest"],
+    "shap_explanation": "{\"serror_rate\": 0.44, \"rerror_rate\": 0.19}"
+  }
+]
