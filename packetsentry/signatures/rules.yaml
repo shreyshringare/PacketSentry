@@ -1,0 +1,29 @@
+metadata:
+  version: 1.0.0
+  updated_at: 2026-05-19
+
+policies:
+  # 1. Deterministic Signature Matches (Aho-Corasick)
+  - name: Banned Payloads
+    type: payload_signature
+    action: DENY
+    patterns:
+      - "select * from"
+      - "/etc/passwd"
+      - "\x90\x90\x90" # NOP sled
+      - "' OR '1'='1"
+
+  # 2. Strict Protocol Constraints
+  - name: Rate Limiting
+    type: protocol_limit
+    action: DENY
+    rules:
+      max_pps_per_ip: 5000
+      max_syn_connections: 100
+
+  # 3. Connection Boundaries
+  - name: Restricted Ports
+    type: port_restriction
+    action: DENY
+    rules:
+      allowed_ports: [80, 443, 8000, 22]
