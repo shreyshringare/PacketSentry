@@ -21,6 +21,7 @@ from slowapi.errors import RateLimitExceeded
 from pythonjsonlogger import jsonlogger
 
 from ws_manager import WebSocketManager
+from routers import admin as admin_router
 from routers import alerts as alerts_router
 from routers import auth as auth_router
 from routers import capture as capture_router
@@ -213,6 +214,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
 # -----------------------------------------------------------------------
 # Include routers
 # -----------------------------------------------------------------------
+app.include_router(admin_router.router)
 app.include_router(alerts_router.router)
 app.include_router(capture_router.router)
 app.include_router(stats_router.router)
