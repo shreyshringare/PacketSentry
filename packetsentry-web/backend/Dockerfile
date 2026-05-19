@@ -12,8 +12,11 @@ COPY pyproject.toml ./
 COPY packetsentry/ ./packetsentry/
 RUN pip install --no-cache-dir -e .
 
-# Copy models from repo root to where os.chdir("../../") from /app will look (the container root /models)
+# Copy models to /models/ so they resolve correctly after os.chdir("../../") moves CWD to /
 COPY models/ /models/
+
+# Also create /data/ so audit.duckdb fallback path works if env var not set
+RUN mkdir -p /data
 
 # Copy backend-specific files and install dependencies
 COPY packetsentry-web/backend/requirements.txt ./

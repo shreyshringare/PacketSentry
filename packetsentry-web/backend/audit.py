@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,7 +11,11 @@ import duckdb
 
 logger = logging.getLogger(__name__)
 
-_AUDIT_DB = Path("data/audit.duckdb")
+# Resolve relative to this file so os.chdir() in main.py doesn't break the path.
+# Override with AUDIT_DB_PATH env var (e.g. on Railway: /app/data/audit.duckdb).
+_AUDIT_DB = Path(
+    os.environ.get("AUDIT_DB_PATH", str(Path(__file__).parent / "data" / "audit.duckdb"))
+)
 
 
 def _get_conn() -> duckdb.DuckDBPyConnection:
