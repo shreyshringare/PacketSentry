@@ -32,6 +32,14 @@
 > Admin login available with credentials from the project owner.
 
 <p align="center">
+  <img src="docs/screenshot_dashboard.png" alt="PacketSentry Web Dashboard" width="100%">
+</p>
+
+<p align="center">
+  <em>Real-time dashboard — 7-model ensemble scores, alert feed, SHAP attribution</em>
+</p>
+
+<p align="center">
   <a href="#-architecture">Architecture</a> •
   <a href="#-7-model-ensemble">Ensemble</a> •
   <a href="#-key-features">Features</a> •
@@ -51,6 +59,7 @@
 - [Key Features](#-key-features)
 - [Quick Start](#-quick-start)
 - [Usage](#-usage)
+- [Outputs & Results](#-outputs--results)
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
 - [Test Suite](#-test-suite)
@@ -188,6 +197,10 @@ PacketSentry takes a different approach:
 - Top-5 contributing features shown per alert
 - Satisfies GDPR's "right to explanation" requirement
 - Example: `"High dst_bytes (+0.42), SYN flood pattern (+0.31), unusual srv_count (+0.18)"`
+
+<p align="center">
+  <img src="docs/shap_waterfall_example.png" alt="SHAP Waterfall — per-alert feature attribution" width="80%">
+</p>
 
 </details>
 
@@ -362,6 +375,20 @@ python scripts/train_xgboost.py --dataset data/nslkdd/ --output models/
 
 ---
 
+## 📊 Outputs & Results
+
+Full CLI outputs, web dashboard screenshots, and ML benchmark results:
+
+**[→ docs/OUTPUTS.md](docs/OUTPUTS.md)**
+
+Includes:
+- CLI command outputs (`replay`, `alerts`, `explain`, `status`, `bench`)
+- TUI dashboard and web dashboard screenshots
+- NSL-KDD benchmark table (F1 / Precision / Recall / ROC-AUC per model)
+- SHAP beeswarm + waterfall plots, ROC curves, confusion matrix, UMAP projection
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -409,15 +436,17 @@ packetsentry/
 
 | Model | F1 | Precision | Recall | ROC-AUC |
 |---|---|---|---|---|
-| XGBoost + SHAP | 0.784 | — | — | 0.950 |
-| Random Forest | 0.744 | — | — | 0.965 |
-| Isolation Forest *(unsupervised)* | 0.795 | — | — | 0.925 |
-| Z-Score *(statistical)* | 0.364 | — | — | 0.847 |
+| XGBoost + SHAP | 0.7835 | 0.9662 | 0.6589 | 0.9498 |
+| Random Forest | 0.7443 | 0.9664 | 0.6052 | 0.9654 |
+| Isolation Forest *(unsupervised)* | 0.7945 | 0.9650 | 0.6752 | 0.9250 |
+| Z-Score *(statistical)* | 0.3637 | 0.8697 | 0.2300 | 0.8469 |
 | Transformer AE *(temporal)* | — | — | — | — |
 | GNN / GraphSAGE | topology-only* | — | — | — |
 | Aho-Corasick | signature-only* | — | — | — |
 
 > *GNN requires a live network graph; Aho-Corasick requires raw packet payloads. Both contribute to the live ensemble but are not scored against per-flow datasets.*
+>
+> XGBoost 5-fold CV F1 = 0.999 on KDDTrain+; test F1 = 0.784 on KDDTest+. Gap reflects the known NSL-KDD train→test distribution shift — KDDTest+ contains novel attack subtypes absent from the training set, a documented property of the dataset.
 >
 > Reproduce: `python scripts/evaluate_all.py --dataset data/nslkdd/ --output results/`
 
@@ -426,6 +455,14 @@ packetsentry/
 Every alert ships with a SHAP explanation. Top features driving attack classification:
 
 ![SHAP Beeswarm](docs/shap_beeswarm.png)
+
+### ROC Curves
+
+![ROC Curves](docs/roc_curves.png)
+
+### Confusion Matrix (XGBoost)
+
+![Confusion Matrix](docs/confusion_matrix_xgboost.png)
 
 ### Attack Class Separation (UMAP)
 
