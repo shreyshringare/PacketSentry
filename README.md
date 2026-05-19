@@ -24,9 +24,9 @@
 
 | | URL |
 |---|---|
-| **Dashboard** | https://packetsentry.vercel.app ← replace with your Vercel URL |
-| **Backend API** | https://your-app.up.railway.app ← replace with your Railway URL |
-| **API Docs** | https://your-app.up.railway.app/docs |
+| **Dashboard** | https://packet-sentry.vercel.app |
+| **Backend API** | https://packetsentry-production.up.railway.app |
+| **API Docs** | https://packetsentry-production.up.railway.app/docs |
 
 > Click **TRY DEMO** on the dashboard — no login required. Pre-recorded attack alerts with full SHAP attribution.  
 > Admin login available with credentials from the project owner.
