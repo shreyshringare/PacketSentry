@@ -17,8 +17,8 @@ export function Overview() {
       <div className="flex flex-1 overflow-hidden gap-3 px-3 pb-3">
         {/* Left: flow table + ensemble */}
         <div className="flex-1 flex flex-col gap-3 overflow-hidden min-w-0">
-          <div className="bg-white rounded-lg border border-gray-200 flex-1 overflow-hidden">
-            <div className="px-3 py-2 border-b border-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="bg-white border-2 border-black shadow-brutalist flex-1 overflow-hidden">
+            <div className="px-3 py-2 border-b-2 border-black text-xs font-black text-gray-900 uppercase tracking-wide">
               Active Flows
             </div>
             <div className="overflow-auto flex-1">
@@ -28,7 +28,7 @@ export function Overview() {
           <EnsemblePanel scores={selectedAlert?.shap ? undefined : undefined} />
         </div>
         {/* Right: alert feed */}
-        <div className="w-72 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="w-72 bg-white border-2 border-black shadow-brutalist overflow-hidden">
           <AlertFeed />
         </div>
       </div>
