@@ -45,44 +45,38 @@ export function StatCards() {
   const stats = useCaptureStore((s) => s.stats);
   const alerts = useAlertStore((s) => s.alerts);
 
-  const critCount = alerts.filter((a) => a.severity === "CRITICAL").length;
-  const confPercent = Math.round(stats.ensemble_conf * 100);
-  const confAccent =
-    stats.ensemble_conf >= 0.8
-      ? "red"
-      : stats.ensemble_conf >= 0.5
-      ? "amber"
-      : "green";
+  const deterministicCount = alerts.filter((a) => a.rule === "Signature Match").length;
+  const anomalyCount = alerts.filter((a) => a.rule !== "Signature Match").length;
 
   return (
     <div className="grid grid-cols-4 gap-3 p-3">
       <Card
-        label="Packets / min"
-        value={(stats.pps * 60).toLocaleString()}
-        sub={`${stats.pps} pps`}
-        accent={stats.pps > 5000 ? "red" : "green"}
-        icon={PixelPulse}
+        label="Active Flows"
+        value={stats.flows.toLocaleString()}
+        sub={`${stats.pps} pps throughput`}
+        accent="green"
+        icon={PixelBranch}
       />
       <Card
-        label="Active Alerts"
-        value={stats.active_alerts}
-        sub={critCount > 0 ? `${critCount} critical` : "none critical"}
-        accent={stats.active_alerts > 0 ? "red" : "green"}
-        icon={PixelAlert}
-      />
-      <Card
-        label="Ensemble Confidence"
-        value={`${confPercent}%`}
-        sub={stats.ensemble_conf >= 0.5 ? "above threshold" : "below threshold"}
-        accent={confAccent}
+        label="Gate 1: Rules"
+        value={deterministicCount}
+        sub="Deterministic Blocks"
+        accent={deterministicCount > 0 ? "red" : "green"}
         icon={PixelShield}
       />
       <Card
-        label="Flows Tracked"
-        value={stats.flows.toLocaleString()}
-        sub="60s window"
-        accent="green"
-        icon={PixelBranch}
+        label="Gate 2: ML Models"
+        value={anomalyCount}
+        sub="Probabilistic Anomalies"
+        accent={anomalyCount > 0 ? "amber" : "green"}
+        icon={PixelAlert}
+      />
+      <Card
+        label="System Confidence"
+        value={`${Math.round(stats.ensemble_conf * 100)}%`}
+        sub={stats.ensemble_conf >= 0.5 ? "Anomalous threshold" : "Stable threshold"}
+        accent={stats.ensemble_conf >= 0.8 ? "red" : stats.ensemble_conf >= 0.5 ? "amber" : "green"}
+        icon={PixelPulse}
       />
     </div>
   );
