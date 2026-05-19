@@ -31,7 +31,11 @@ function Row({ index, style, packets }: any) {
       <span className="w-32 truncate">{pkt.dst}</span>
       <span className="w-10">{pkt.proto}</span>
       <span className="w-12 text-right">{pkt.length}B</span>
-      {pkt.flags && <span className="text-[10px] bg-gray-800 px-1 rounded text-gray-300">{pkt.flags}</span>}
+      {pkt.flags && (
+        <span className="text-[10px] bg-[#00FF41] text-black font-bold px-1">
+          {pkt.flags}
+        </span>
+      )}
     </div>
   );
 }
@@ -43,8 +47,8 @@ export function PacketStream() {
   const height = Math.min(packets.length, MAX_VISIBLE) * ITEM_HEIGHT || ITEM_HEIGHT * 5;
 
   return (
-    <div className="flex-1 min-h-0 bg-gray-900 border border-gray-800 rounded-lg p-2 overflow-hidden flex flex-col">
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-800 text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
+    <div className="flex-1 min-h-0 bg-gray-900 border-2 border-black crt-scanlines p-2 overflow-hidden flex flex-col">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b-2 border-gray-700 text-[10px] font-bold text-[#00FF41] uppercase tracking-wider shrink-0">
         <span className="w-16">Time</span>
         <span className="w-32">Source</span>
         <span className="w-32">Destination</span>
