@@ -1,116 +1,187 @@
 // packetsentry-web/frontend/src/screens/Landing.tsx
+import { useState } from "react";
 import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { PixelShield } from "../components/PixelIcons";
 
 const STATS = [
-  { label: "ML Models", value: "7" },
-  { label: "Tests", value: "241" },
-  { label: "NSL-KDD F1", value: "99%" },
-  { label: "Detectors", value: "Parallel" },
+  { value: "7", label: "ML Models", sub: "Ensemble inference" },
+  { value: "241", label: "Tests Passing", sub: "Full coverage" },
+  { value: "99%", label: "NSL-KDD F1", sub: "Benchmark dataset" },
+  { value: "<1ms", label: "Alert Latency", sub: "Per-packet scoring" },
 ];
 
-const STACK = [
-  "XGBoost + SHAP",
-  "GraphSAGE GNN (scratch)",
-  "Transformer AE",
-  "Isolation Forest",
-  "Aho-Corasick (scratch)",
-  "FastAPI + WebSocket",
-  "React + TypeScript",
-  "DuckDB + ChromaDB",
+const FEATURES = [
+  {
+    step: "01",
+    title: "Capture",
+    desc: "Raw packets off the wire via libpcap. Protocol dissection: Ethernet → IP → TCP/UDP → DNS.",
+  },
+  {
+    step: "02",
+    title: "Analyze",
+    desc: "7-model ensemble: XGBoost, GNN, Transformer AE, Isolation Forest, Z-Score — run in parallel.",
+  },
+  {
+    step: "03",
+    title: "Explain",
+    desc: "Every alert ships with SHAP feature attribution. No black-box decisions — every call is justified.",
+  },
+];
+
+const STACK_GROUPS = [
+  { group: "ML", items: ["XGBoost + SHAP", "GraphSAGE GNN", "Transformer AE", "Isolation Forest"] },
+  { group: "Backend", items: ["FastAPI", "WebSocket", "DuckDB", "ChromaDB"] },
+  { group: "From Scratch", items: ["Aho-Corasick Trie", "GraphSAGE MPNN", "Textual TUI", "CLI (Typer)"] },
 ];
 
 export function Landing({ onLogin }: { onLogin: () => void }) {
   const login = useAuthStore((s) => s.login);
+  const [loading, setLoading] = useState(false);
 
   async function handleDemo() {
-    const { access_token, role } = await api.demoToken();
-    login(access_token, role as "admin" | "demo");
+    setLoading(true);
+    try {
+      const { access_token, role } = await api.demoToken();
+      login(access_token, role as "admin" | "demo");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-[#C0C0C0] flex flex-col">
-      {/* Nav */}
-      <header className="h-11 border-b-2 border-black bg-white flex items-center justify-between px-6 shrink-0">
+
+      {/* ── Navbar ─────────────────────────────────── */}
+      <header className="h-12 border-b-2 border-black bg-white flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-2">
-          <PixelShield size={18} className="text-gray-900" />
-          <span className="font-black text-sm tracking-wide uppercase">PacketSentry</span>
+          <PixelShield size={20} className="text-black" />
+          <span className="font-black text-sm tracking-widest uppercase">PacketSentry</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           <a
-            href="https://github.com/shreyshringare/network-intrusion-detection"
+            href="https://github.com/shreyshringare/PacketSentry"
             target="_blank"
             rel="noreferrer"
-            className="border-2 border-black px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-colors duration-100"
+            className="text-[11px] font-bold uppercase tracking-wide text-gray-500 hover:text-black transition-colors"
           >
             GitHub
           </a>
           <button
             onClick={onLogin}
-            className="border-2 border-black bg-black text-[#00FF41] px-3 py-1 text-xs font-bold uppercase tracking-wide hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
+            className="border-2 border-black bg-black text-[#00FF41] px-4 py-1.5 text-xs font-black uppercase tracking-widest hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
           >
             Login
           </button>
         </div>
       </header>
 
-      {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
-        <div className="border-2 border-black bg-white shadow-brutalist px-8 py-10 max-w-2xl w-full">
-          <p className="font-mono text-xs text-[#00FF41] bg-black px-2 py-1 inline-block mb-4 tracking-widest">
-            [&gt;] SYSTEM ONLINE
-          </p>
-          <h1 className="font-black text-4xl uppercase tracking-tight leading-none mb-3">
-            PacketSentry
+      <main className="flex-1 flex flex-col">
+
+        {/* ── Hero ───────────────────────────────────── */}
+        <section className="flex flex-col items-center justify-center px-6 pt-16 pb-10 text-center">
+          <span className="font-mono text-[10px] text-[#00FF41] bg-black px-3 py-1 tracking-[0.25em] uppercase mb-5 inline-block">
+            [&gt;] REAL-TIME NETWORK INTRUSION DETECTION
+          </span>
+
+          <h1 className="font-black text-6xl uppercase tracking-tight leading-none mb-4 text-black">
+            Packet<span className="text-black">Sentry</span>
           </h1>
-          <p className="font-mono text-sm text-gray-600 mb-6">
-            Network Intrusion Detection System — 7-model ML ensemble,
-            SHAP-explained alerts, real-time dashboard
+
+          <p className="font-mono text-sm text-gray-700 max-w-lg mb-8 leading-relaxed">
+            A production-grade NIDS with a 7-model ML ensemble, SHAP-explained alerts,
+            real-time WebSocket dashboard, and full CLI control surface.
           </p>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-4 gap-0 border-2 border-black mb-6">
-            {STATS.map((s, i) => (
-              <div
-                key={s.label}
-                className={`px-4 py-3 text-center ${i < STATS.length - 1 ? "border-r-2 border-black" : ""}`}
-              >
-                <div className="font-black text-2xl text-[#00FF41] bg-black px-1">{s.value}</div>
-                <div className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3">
             <button
               onClick={handleDemo}
-              className="bg-black text-[#00FF41] border-2 border-black font-black uppercase tracking-wide px-6 py-3 text-sm hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
+              disabled={loading}
+              className="bg-black text-[#00FF41] border-2 border-black font-black uppercase tracking-widest px-8 py-3 text-sm hover:bg-[#00FF41] hover:text-black disabled:opacity-50 transition-colors duration-100 shadow-brutalist"
             >
-              TRY DEMO
+              {loading ? "LOADING..." : "TRY DEMO"}
+            </button>
+            <button
+              onClick={onLogin}
+              className="bg-white text-black border-2 border-black font-black uppercase tracking-widest px-8 py-3 text-sm hover:bg-black hover:text-white transition-colors duration-100"
+            >
+              Login
             </button>
           </div>
-        </div>
 
-        {/* Stack grid */}
-        <div className="mt-8 max-w-2xl w-full">
-          <p className="font-mono text-[10px] text-gray-600 uppercase tracking-widest mb-3">// TECH STACK</p>
-          <div className="grid grid-cols-4 gap-2">
-            {STACK.map((item) => (
-              <div key={item} className="border-2 border-black bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-center">
-                {item}
+          <p className="text-[9px] font-mono text-gray-500 mt-3 tracking-wide">
+            Demo mode: pre-recorded data · no live capture · read-only
+          </p>
+        </section>
+
+        {/* ── Stats bar ──────────────────────────────── */}
+        <section className="border-y-2 border-black bg-white">
+          <div className="max-w-4xl mx-auto grid grid-cols-4 divide-x-2 divide-black">
+            {STATS.map((s) => (
+              <div key={s.label} className="px-6 py-5 text-center">
+                <div className="font-black text-3xl text-black leading-none">{s.value}</div>
+                <div className="font-bold text-xs uppercase tracking-widest text-black mt-1">{s.label}</div>
+                <div className="font-mono text-[9px] text-gray-400 mt-0.5">{s.sub}</div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
+
+        {/* ── How it works ───────────────────────────── */}
+        <section className="px-6 py-12">
+          <div className="max-w-4xl mx-auto">
+            <p className="font-mono text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-6 text-center">
+              // HOW IT WORKS
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              {FEATURES.map((f) => (
+                <div key={f.step} className="bg-white border-2 border-black p-5 shadow-brutalist">
+                  <div className="font-mono text-[10px] text-gray-400 mb-2">{f.step}</div>
+                  <div className="font-black text-lg uppercase tracking-wide mb-2">{f.title}</div>
+                  <div className="font-mono text-[11px] text-gray-600 leading-relaxed">{f.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Tech stack ─────────────────────────────── */}
+        <section className="px-6 pb-12">
+          <div className="max-w-4xl mx-auto">
+            <p className="font-mono text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-6 text-center">
+              // TECH STACK
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              {STACK_GROUPS.map((g) => (
+                <div key={g.group} className="bg-white border-2 border-black">
+                  <div className="bg-black text-[#00FF41] font-mono text-[10px] tracking-widest px-3 py-1.5 uppercase">
+                    {g.group}
+                  </div>
+                  <ul className="divide-y divide-gray-100">
+                    {g.items.map((item) => (
+                      <li key={item} className="px-3 py-2 font-mono text-[11px] text-gray-700">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
 
-      {/* Footer */}
-      <footer className="h-6 border-t-2 border-black bg-white flex items-center justify-between px-4 text-[9px] text-gray-400 font-mono shrink-0">
-        <span>PACKETSENTRY // NIDS v1.0</span>
-        <span>241 TESTS PASSING // 7-MODEL ENSEMBLE // SHAP-EXPLAINED</span>
+      {/* ── Footer ─────────────────────────────────── */}
+      <footer className="border-t-2 border-black bg-black py-3 px-6 flex items-center justify-between shrink-0">
+        <span className="font-mono text-[9px] text-[#00FF41] tracking-widest uppercase">
+          PacketSentry // NIDS v1.0
+        </span>
+        <span className="font-mono text-[9px] text-gray-500 tracking-wide">
+          241 tests · 7 models · SHAP-explained
+        </span>
       </footer>
+
     </div>
   );
 }
