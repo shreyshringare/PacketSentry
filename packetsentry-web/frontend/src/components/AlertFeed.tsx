@@ -9,10 +9,10 @@ const SEV_CLS: Record<string, string> = {
 };
 
 const BADGE_CLS: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-700",
-  HIGH: "bg-amber-100 text-amber-700",
-  MED: "bg-blue-100 text-blue-700",
-  LOW: "bg-gray-100 text-gray-600",
+  CRITICAL: "bg-red-600 text-white",
+  HIGH: "bg-amber-500 text-black",
+  MED: "bg-blue-600 text-white",
+  LOW: "bg-gray-200 text-gray-700",
 };
 
 function AlertRow({ alert }: { alert: AlertEvent }) {
@@ -27,7 +27,9 @@ function AlertRow({ alert }: { alert: AlertEvent }) {
 
   return (
     <div
-      className={`border-l-4 px-3 py-2 cursor-pointer hover:opacity-90 transition-opacity ${SEV_CLS[alert.severity] ?? "bg-white border-l-gray-300"}`}
+      className={`border-l-4 border-b-2 border-b-black px-3 py-2 cursor-pointer hover:bg-black hover:text-white transition-colors duration-100 ${
+        SEV_CLS[alert.severity] ?? "bg-white border-l-gray-300"
+      }`}
       onClick={() => {
         setSelectedAlert(alert);
         setScreen("alerts");
@@ -35,19 +37,23 @@ function AlertRow({ alert }: { alert: AlertEvent }) {
     >
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-1.5">
-          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${BADGE_CLS[alert.severity]}`}>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded-none font-bold uppercase tracking-wide ${
+              BADGE_CLS[alert.severity]
+            }`}
+          >
             {alert.severity}
           </span>
-          <span className="text-xs font-semibold text-gray-800">{alert.rule}</span>
+          <span className="text-xs font-bold text-gray-800">{alert.rule}</span>
         </div>
-        <span className="text-[10px] text-gray-400">
+        <span className="text-[10px] text-gray-400 font-mono">
           {new Date(alert.ts * 1000).toLocaleTimeString()}
         </span>
       </div>
       <div className="text-[11px] font-mono text-gray-600 mt-0.5">
         {alert.src_ip} → {alert.dst_ip}:{alert.port}
       </div>
-      <div className="text-[10px] text-gray-400 mt-0.5">
+      <div className="text-[10px] text-gray-400 mt-0.5 font-mono">
         conf: <strong>{alert.confidence.toFixed(2)}</strong> | {alert.detectors.length}/7 models
       </div>
       {topShap && (
@@ -62,19 +68,21 @@ export function AlertFeed() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-gray-200 bg-gray-50">
-        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+      <div className="px-3 py-2 border-b-2 border-black bg-white">
+        <span className="text-xs font-black text-gray-900 uppercase tracking-wide">
           Alert Feed
         </span>
         {alerts.length > 0 && (
-          <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
+          <span className="ml-2 text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded-none font-bold">
             {alerts.length}
           </span>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+      <div className="flex-1 overflow-y-auto">
         {alerts.length === 0 ? (
-          <div className="p-6 text-center text-xs text-gray-400">No alerts yet</div>
+          <div className="p-6 text-center text-xs text-gray-500 font-mono terminal-cursor">
+            &gt; Awaiting threats...
+          </div>
         ) : (
           alerts.map((a) => <AlertRow key={a.id} alert={a} />)
         )}
