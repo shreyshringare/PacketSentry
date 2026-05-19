@@ -26,6 +26,7 @@ from routers import alerts as alerts_router
 from routers import auth as auth_router
 from routers import capture as capture_router
 from routers import demo as demo_router
+from routers import simulate as simulate_router
 from routers import stats as stats_router
 
 
@@ -161,6 +162,7 @@ async def startup() -> None:
     alerts_router.set_dependencies(_store, _arbiter)
     capture_router.set_dependencies(_pipeline, _ws_manager)
     stats_router.set_dependencies(_pipeline, _store, _vector_store)
+    simulate_router.set_dependencies(_store, _arbiter, _ws_manager)
 
     admin_password = os.environ.get("PACKETSENTRY_ADMIN_PASSWORD", "admin")
     auth_router.set_admin_password(admin_password)
@@ -225,6 +227,7 @@ app.include_router(capture_router.router)
 app.include_router(stats_router.router)
 app.include_router(auth_router.router)
 app.include_router(demo_router.router)
+app.include_router(simulate_router.router)
 
 
 # -----------------------------------------------------------------------

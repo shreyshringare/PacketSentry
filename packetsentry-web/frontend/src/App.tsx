@@ -9,7 +9,9 @@ import { Landing } from "./screens/Landing";
 import { Login } from "./screens/Login";
 import { useUIStore } from "./store/uiStore";
 import { useAuthStore } from "./store/authStore";
+import { useAlertStore } from "./store/alertStore";
 import { useWebSocket } from "./hooks/useWebSocket";
+import { api } from "./api/client";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,8 +22,36 @@ const queryClient = new QueryClient({
   },
 });
 
+function useDemoAlerts() {
+  const isDemo = useAuthStore((s) => s.isDemo);
+  const addAlert = useAlertStore((s) => s.addAlert);
+
+  React.useEffect(() => {
+    if (!isDemo) return;
+    api.getAlerts().then((rows) => {
+      // Map REST alert shape → AlertEvent shape (newest first)
+      const alerts = (rows as any[]).reverse().map((r: any) => ({
+        id: r.id ?? r.alert_id,
+        rule: r.rule ?? "Unknown",
+        severity: r.severity ?? "LOW",
+        confidence: r.confidence ?? 0,
+        src_ip: r.src_ip ?? "0.0.0.0",
+        dst_ip: r.dst_ip ?? "0.0.0.0",
+        port: r.dst_port ?? r.port ?? 0,
+        detectors: r.detectors ?? [],
+        shap: typeof r.shap_explanation === "string"
+          ? JSON.parse(r.shap_explanation || "{}")
+          : (r.shap_explanation ?? {}),
+        ts: r.ts ?? Math.floor(new Date(r.timestamp ?? Date.now()).getTime() / 1000),
+      }));
+      alerts.forEach(addAlert);
+    }).catch(() => {/* backend offline — silently skip */});
+  }, [isDemo]);
+}
+
 function Dashboard() {
   useWebSocket();
+  useDemoAlerts();
   const activeScreen = useUIStore((s) => s.activeScreen);
   const isDemo = useAuthStore((s) => s.isDemo);
 

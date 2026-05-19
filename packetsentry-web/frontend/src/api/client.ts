@@ -72,4 +72,26 @@ export const api = {
 
   getSimilar: (alertId: string, top = 5) =>
     apiFetch<{ similar_alerts: unknown[] }>(`/api/similar/${alertId}?top=${top}`),
+
+  // Simulate
+  simulateBurst: (count: number, attackType?: string) =>
+    apiFetch<{ ok: boolean; generated: number; alerts: unknown[] }>("/api/simulate", {
+      method: "POST",
+      body: JSON.stringify({ count, attack_type: attackType ?? null }),
+    }),
+
+  simulateStart: (interval: number, attackType?: string) =>
+    apiFetch<{ ok: boolean; started?: boolean; already_running?: boolean }>("/api/simulate/start", {
+      method: "POST",
+      body: JSON.stringify({ interval, attack_type: attackType ?? null }),
+    }),
+
+  simulateStop: () =>
+    apiFetch<{ ok: boolean; stopped?: boolean }>("/api/simulate/stop", { method: "POST" }),
+
+  simulateStatus: () =>
+    apiFetch<{ running: boolean }>("/api/simulate/status"),
+
+  getAttackTypes: () =>
+    apiFetch<{ attack_types: { id: string; label: string }[] }>("/api/simulate/attack-types"),
 };

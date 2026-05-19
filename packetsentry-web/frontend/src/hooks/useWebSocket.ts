@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import { useCaptureStore } from "../store/captureStore";
 import { useAlertStore } from "../store/alertStore";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000/ws";
+const _API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+const WS_URL = import.meta.env.VITE_WS_URL ?? _API_URL.replace(/^http/, "ws") + "/ws";
 const MAX_RETRIES = 10;
 
 export function useWebSocket() {
