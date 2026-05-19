@@ -38,12 +38,16 @@ const STACK_GROUPS = [
 export function Landing({ onLogin }: { onLogin: () => void }) {
   const login = useAuthStore((s) => s.login);
   const [loading, setLoading] = useState(false);
+  const [demoError, setDemoError] = useState("");
 
   async function handleDemo() {
     setLoading(true);
+    setDemoError("");
     try {
       const { access_token, role } = await api.demoToken();
       login(access_token, role as "admin" | "demo");
+    } catch {
+      setDemoError("Backend offline — start the API server first.");
     } finally {
       setLoading(false);
     }
@@ -108,6 +112,12 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
               Login
             </button>
           </div>
+
+          {demoError && (
+            <p className="text-red-600 font-mono text-[10px] border border-red-600 px-3 py-1 mt-2">
+              [ERR] {demoError}
+            </p>
+          )}
 
           <p className="text-[9px] font-mono text-gray-500 mt-3 tracking-wide">
             Demo mode: pre-recorded data · no live capture · read-only

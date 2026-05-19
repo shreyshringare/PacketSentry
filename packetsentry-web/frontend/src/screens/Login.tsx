@@ -25,9 +25,12 @@ export function Login({ onBack }: { onBack: () => void }) {
 
   async function handleDemo() {
     setLoading(true);
+    setError("");
     try {
       const { access_token, role } = await api.demoToken();
       login(access_token, role as "admin" | "demo");
+    } catch {
+      setError("Backend offline — start the API server first.");
     } finally {
       setLoading(false);
     }
