@@ -85,15 +85,16 @@ def test_eval_transformer_ae_returns_metrics():
 
 
 def test_eval_gnn_returns_metrics():
-    """eval_gnn returns dict with f1/roc_auc and a proba array."""
+    """eval_gnn returns (metrics_dict, proba_array, y_true_array)."""
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
     from evaluate_all import eval_gnn
 
-    metrics, proba = eval_gnn(seed=42)
+    metrics, proba, y_true = eval_gnn(seed=42)
     assert metrics["model"] == "GNN (GraphSAGE)"
     assert "f1" in metrics and metrics["f1"] is not None
     assert "roc_auc" in metrics and metrics["roc_auc"] is not None
     assert 0.0 <= metrics["f1"] <= 1.0
+    assert len(proba) == len(y_true)
     assert len(proba) > 0

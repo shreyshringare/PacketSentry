@@ -240,7 +240,7 @@ def eval_gnn(
     n_portscan: int = 50,
     n_ddos: int = 50,
     seed: int = 42,
-) -> tuple[dict, np.ndarray]:
+) -> tuple[dict, np.ndarray, np.ndarray]:
     """Benchmark GNN topology detection on synthetic graph scenarios.
 
     NSL-KDD has no IP addresses, so this builds synthetic topology:
@@ -297,8 +297,9 @@ def eval_gnn(
     for _, _, feat in normal_flows:
         try:
             normal_scores.append(float(gnn.score(_make_ff(feat))))
-        except Exception:
-            normal_scores.append(0.0)
+        except Exception as exc:
+            logger.debug("GNN score failed for normal flow: %s", exc)
+            normal_scores.append(0.1)
 
     # Score attack flows
     attack_scores = []
@@ -306,8 +307,9 @@ def eval_gnn(
         try:
             gnn._graph.add_flow(src, dst, feat)
             attack_scores.append(float(gnn.score(_make_ff(feat))))
-        except Exception:
-            attack_scores.append(0.5)
+        except Exception as exc:
+            logger.debug("GNN score failed for attack flow: %s", exc)
+            attack_scores.append(0.1)
 
     all_scores = np.array(normal_scores + attack_scores, dtype=np.float32)
     y_true = np.array([0] * len(normal_scores) + [1] * len(attack_scores), dtype=np.int32)
@@ -317,7 +319,7 @@ def eval_gnn(
     metrics = compute_metrics("GNN (GraphSAGE)", y_true, y_pred, y_proba)
     metrics["note"] = "Synthetic topology: port-scan (1→50) + DDoS (50→1) vs 500 normal flows"
     logger.info("GNN topology benchmark: F1=%.4f AUC=%.4f", metrics["f1"], metrics["roc_auc"])
-    return metrics, y_proba
+    return metrics, y_proba, y_true
 
 
 # ── T5: TransformerAE + helper ───────────────────────────────────────────────
@@ -591,12 +593,9 @@ def run(
 
     if not skip_slow:
         typer.echo("\n7. GNN GraphSAGE (synthetic topology benchmark)...")
-        gnn_metrics, gnn_proba = eval_gnn(seed=seed)
+        gnn_metrics, gnn_proba, gnn_ytrue = eval_gnn(seed=seed)
         all_metrics.append(gnn_metrics)
-        all_probas["GNN (GraphSAGE)"] = (
-            np.array([0] * 500 + [1] * 100, dtype=np.int32),
-            gnn_proba,
-        )
+        all_probas["GNN (GraphSAGE)"] = (gnn_ytrue, gnn_proba)
         typer.echo(f"   F1={gnn_metrics['f1']:.4f}  AUC={gnn_metrics['roc_auc']:.4f}  [{gnn_metrics.get('note', '')}]")
     else:
         all_metrics.append(
