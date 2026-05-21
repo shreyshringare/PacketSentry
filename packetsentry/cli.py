@@ -2,7 +2,7 @@
 
 Commands:
   packetsentry live      — Start live capture with TUI dashboard (--no-tui for headless JSON)
-  packetsentry replay    — Replay a PCAP through the pipeline
+  packetsentry replay    — Replay a PCAP through the pipeline (--output json for machine-readable)
   packetsentry alerts    — View alert history from DuckDB (--severity, --output)
   packetsentry bench     — Benchmark Aho-Corasick vs regex
   packetsentry serve     — Start the FastAPI web backend
@@ -77,36 +77,57 @@ def live(
 def replay(
     pcap: str = typer.Argument(..., help="Path to PCAP file."),
     speed: float = typer.Option(0.0, help="Replay speed multiplier (0 = max speed)."),
+    output: str = typer.Option("table", help="Output format: table or json."),
 ):
     """Replay a PCAP file through the detection pipeline."""
+    import time as _time
     from packetsentry.capture.pipeline import DetectionPipeline
     from packetsentry.capture.replay import replay_pcap
+    from packetsentry.alerts.severity import confidence_to_severity
 
+    _severity_colors = {"CRITICAL": "red", "HIGH": "yellow", "MED": "cyan", "LOW": "white"}
     pipeline = DetectionPipeline()
-    alert_count = 0
+    json_alerts: list[dict] = []
 
-    def on_alert(result):
-        nonlocal alert_count
-        alert_count += 1
-        # Infer severity from confidence
-        if result.confidence >= 0.90:
-            sev, color = "CRITICAL", "red"
-        elif result.confidence >= 0.75:
-            sev, color = "HIGH", "yellow"
-        elif result.confidence >= 0.60:
-            sev, color = "MED", "cyan"
+    def on_alert(result, features, src_ip, dst_ip, dst_port):
+        sev = confidence_to_severity(result.confidence)
+        if output == "json":
+            record = {
+                "ts": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+                "severity": sev,
+                "confidence": round(result.confidence, 4),
+                "src_ip": src_ip,
+                "dst_ip": dst_ip,
+                "dst_port": dst_port,
+                "scores": {k: round(v, 4) for k, v in result.scores.items()},
+            }
+            print(json.dumps(record), flush=True)
+            json_alerts.append(record)
         else:
-            sev, color = "LOW", "white"
+            color = _severity_colors.get(sev, "white")
+            console.print(
+                f"  [{color}]🚨 {sev}[/{color}] conf={result.confidence:.2f} "
+                f"aho={result.scores.get('aho_corasick', 0):.2f} "
+                f"xgb={result.scores.get('xgboost', 0):.2f} "
+                f"gnn={result.scores.get('gnn_detector', 0):.2f}"
+            )
 
-        console.print(
-            f"  [{color}]🚨 {sev}[/{color}] conf={result.confidence:.2f} "
-            f"aho={result.scores.get('aho_corasick', 0):.2f} "
-            f"xgb={result.scores.get('xgboost', 0):.2f} "
-            f"gnn={result.scores.get('gnn_detector', 0):.2f}"
-        )
+    if output != "json":
+        console.print(f"[bold]Replaying:[/bold] {pcap} at speed={speed}x")
 
-    console.print(f"[bold]Replaying:[/bold] {pcap} at speed={speed}x")
     summary = replay_pcap(pcap, pipeline, speed=speed, alert_callback=on_alert)
+
+    if output == "json":
+        print(json.dumps({
+            "summary": {
+                "packets": summary["packets"],
+                "flows": summary["flows"],
+                "alerts": summary["alerts"],
+                "duration_sec": summary["duration_sec"],
+            },
+            "alerts": json_alerts,
+        }, indent=2))
+        return
 
     table = Table(title="Replay Summary")
     table.add_column("Metric", style="cyan")

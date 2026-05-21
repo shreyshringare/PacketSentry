@@ -234,13 +234,13 @@ app.include_router(simulate_router.router)
 # Helpers
 # -----------------------------------------------------------------------
 
+_SEVERITY_THRESHOLDS = [(0.90, "CRITICAL"), (0.75, "HIGH"), (0.60, "MED"), (0.0, "LOW")]
+
+
 def _severity(conf: float) -> str:
-    if conf >= 0.80:
-        return "CRITICAL"
-    if conf >= 0.60:
-        return "HIGH"
-    if conf >= 0.40:
-        return "MED"
+    for threshold, label in _SEVERITY_THRESHOLDS:
+        if conf >= threshold:
+            return label
     return "LOW"
 
 
