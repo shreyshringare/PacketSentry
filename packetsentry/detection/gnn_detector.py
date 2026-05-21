@@ -260,6 +260,10 @@ class GNNDetector:
         hidden: GraphSAGE hidden dimension.
         latent: Encoder bottleneck dimension.
         max_nodes: Max unique IPs in the graph (oldest evicted).
+        retrain_every: Retrain the model every N flows after the initial
+            warmup. Reduces O(n²) overhead by amortising training cost
+            across a batch of flows instead of retraining on each one.
+            Set to 0 to disable periodic retraining.
     """
 
     def __init__(
@@ -269,10 +273,12 @@ class GNNDetector:
         hidden: int = 64,
         latent: int = 32,
         max_nodes: int = 256,
+        retrain_every: int = 50,
     ) -> None:
         self._model = GraphAutoencoder(hidden=hidden, latent=latent)
         self._warmup = warmup
         self._epochs = epochs
+        self._retrain_every = retrain_every
         self._graph = FlowGraph(max_nodes=max_nodes)
         self._flow_count = 0
         self._is_trained = False
@@ -306,6 +312,14 @@ class GNNDetector:
             if self._flow_count >= self._warmup:
                 self._train()
             return 0.0
+
+        # Periodic batch retrain: amortises O(n²) graph training cost across
+        # retrain_every flows instead of retraining on every single flow.
+        if (
+            self._retrain_every > 0
+            and self._flow_count % self._retrain_every == 0
+        ):
+            self._train()
 
         return self._score_flow(src_idx, dst_idx)
 
