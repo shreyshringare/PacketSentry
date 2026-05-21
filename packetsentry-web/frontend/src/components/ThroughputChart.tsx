@@ -76,10 +76,10 @@ export function ThroughputChart() {
                 fontSize: 10,
                 color: "#ccc",
               }}
-              formatter={(value: number, name: string) =>
+              formatter={(value, name) =>
                 name === "conf"
-                  ? [`${value.toFixed(1)}%`, "Threat conf"]
-                  : [`${value.toFixed(0)}/s`, "PPS"]
+                  ? [`${Number(value).toFixed(1)}%`, "Threat conf"]
+                  : [`${Number(value).toFixed(0)}/s`, "PPS"]
               }
               labelFormatter={() => ""}
               isAnimationActive={false}
