@@ -1,20 +1,21 @@
-"""Ensemble arbiter — confidence-weighted voting across 6 detectors.
+"""Ensemble arbiter — confidence-weighted voting across 7 detectors.
 
 Combines scores from all detectors into a single decision with:
   - Confidence-weighted vote (weighted sum)
   - SHAP explanation attached to every alert
   - Self-calibrating false positive feedback loop
 
-The 6 detectors and their initial weights:
+The 7 detectors and their initial weights:
 
     Detector            Weight   Type
     ─────────────────── ──────   ─────────────────────────────────────
-    aho_corasick        0.25     Signature — exact pattern matching
-    xgboost             0.25     Supervised — trained on NSL-KDD
-    random_forest       0.10     Supervised — baseline comparison
-    isolation_forest    0.15     Unsupervised — self-trains on baseline
-    transformer_ae      0.15     Temporal — Transformer Autoencoder (Phase 4)
-    zscore              0.10     Statistical — Welford online z-score
+    aho_corasick        0.20     Signature — exact pattern matching
+    xgboost             0.22     Supervised — trained on NSL-KDD
+    gnn_detector        0.15     Topology — GraphSAGE from scratch
+    transformer_ae      0.15     Temporal — Transformer Autoencoder
+    isolation_forest    0.12     Unsupervised — self-trains on baseline
+    random_forest       0.08     Supervised — baseline comparison
+    zscore              0.08     Statistical — Welford online z-score
 
 Decision threshold: 0.50. Weights are renormalised after every feedback
 call so they always sum to 1.0.
@@ -55,7 +56,7 @@ class DecisionResult:
 
 
 class EnsembleArbiter:
-    """6-model confidence-weighted voting with self-calibrating FP feedback.
+    """7-model confidence-weighted voting with self-calibrating FP feedback.
 
     All detectors must implement ``score(features) -> float``.
     The arbiter is detector-agnostic — it only sees the scores dict.

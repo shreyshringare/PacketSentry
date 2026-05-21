@@ -164,7 +164,7 @@ class AhoCorasick:
         if isinstance(text, str):
             raw = text.lower().encode()
         else:
-            raw = text.lower() if hasattr(text, "lower") else bytes(b.lower() if 32 <= b < 127 else b for b in text)
+            raw = bytes(chr(b).lower().encode()[0] if 32 <= b < 127 else b for b in text)
 
         matches: list[Match] = []
         node = self._root
