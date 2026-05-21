@@ -25,6 +25,8 @@ policies:
       - "INTO OUTFILE"
       - "information_schema"
       - "sys.tables"
+      - "CAST(0x"
+      - "CHAR(0x"
 
   # ── Cross-Site Scripting (XSS) ───────────────────────────────────────────
   - id: SIG-002
@@ -46,6 +48,9 @@ policies:
       - "<img src=x"
       - "alert(1)"
       - "String.fromCharCode("
+      - "<iframe"
+      - "<embed"
+      - "<object"
 
   # ── Command Injection ────────────────────────────────────────────────────
   - id: SIG-003
@@ -65,6 +70,9 @@ policies:
       - "bash -i >& /dev/tcp"
       - "python -c 'import socket"
       - "perl -e 'use Socket"
+      - "`/bin/sh"
+      - "`cmd.exe"
+      - "chmod 777"
 
   # ── Path Traversal / LFI ─────────────────────────────────────────────────
   - id: SIG-004
@@ -115,6 +123,7 @@ policies:
       - "${${lower:j}ndi:"
       - "${${::-j}${::-n}${::-d}${::-i}:"
       - "jndi:ldap"
+      - "${env:"
 
   # ── Shellshock (CVE-2014-6271) ───────────────────────────────────────────
   - id: SIG-007
@@ -137,10 +146,11 @@ policies:
       - "iodine"
       - "dns2tcp"
 
-  # ── SSH Brute Force ──────────────────────────────────────────────────────
+  # Detects known automated SSH client libraries (paramiko, libssh, Go SSH, JSCH)
+  # ── SSH Automated Tool Detection ──────────────────────────────────────────
   - id: SIG-009
-    name: SSH Brute Force
-    severity: CRITICAL
+    name: SSH Automated Tool Detection
+    severity: MEDIUM
     type: payload_signature
     patterns:
       - "SSH-2.0-libssh"
