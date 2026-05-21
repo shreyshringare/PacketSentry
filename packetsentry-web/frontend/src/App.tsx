@@ -11,8 +11,10 @@ import { Login } from "./screens/Login";
 import { useUIStore } from "./store/uiStore";
 import { useAuthStore } from "./store/authStore";
 import { useAlertStore } from "./store/alertStore";
+import { useCaptureStore } from "./store/captureStore";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { api } from "./api/client";
+import { MOCK_ALERTS, MOCK_FLOWS, MOCK_STATS } from "./mockData";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +28,8 @@ const queryClient = new QueryClient({
 function useDemoAlerts() {
   const isDemo = useAuthStore((s) => s.isDemo);
   const addAlert = useAlertStore((s) => s.addAlert);
+  const setFlows = useAlertStore((s) => s.setFlows);
+  const updateStats = useCaptureStore((s) => s.updateStats);
 
   React.useEffect(() => {
     if (!isDemo) return;
@@ -46,7 +50,12 @@ function useDemoAlerts() {
         ts: r.ts ?? Math.floor(new Date(r.timestamp ?? Date.now()).getTime() / 1000),
       }));
       alerts.forEach(addAlert);
-    }).catch(() => {/* backend offline — silently skip */});
+    }).catch(() => {
+      // Backend offline — load pre-recorded mock data so demo dashboard is populated
+      MOCK_ALERTS.forEach(addAlert);
+      setFlows(MOCK_FLOWS);
+      updateStats(MOCK_STATS);
+    });
   }, [isDemo]);
 }
 

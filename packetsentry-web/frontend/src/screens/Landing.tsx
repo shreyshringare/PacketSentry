@@ -85,20 +85,29 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
 
         {/* ── Hero ───────────────────────────────────── */}
         <section className="flex flex-col items-center justify-center px-6 pt-16 pb-10 text-center">
-          <span className="font-mono text-[10px] text-[#00FF41] bg-black px-3 py-1 tracking-[0.25em] uppercase mb-5 inline-block">
+          <span
+            className="font-mono text-[10px] text-[#00FF41] bg-black px-3 py-1 tracking-[0.25em] uppercase mb-5 inline-block"
+            style={{ animation: "fadeInUp 0.4s ease-out both", animationDelay: "0ms" }}
+          >
             [&gt;] REAL-TIME NETWORK INTRUSION DETECTION
           </span>
 
-          <h1 className="font-black text-6xl uppercase tracking-tight leading-none mb-4 text-black">
+          <h1
+            className="font-black text-6xl uppercase tracking-tight leading-none mb-4 text-black"
+            style={{ animation: "fadeInUp 0.4s ease-out both", animationDelay: "100ms" }}
+          >
             Packet<span className="text-black">Sentry</span>
           </h1>
 
-          <p className="font-mono text-sm text-gray-700 max-w-lg mb-8 leading-relaxed">
+          <p
+            className="font-mono text-sm text-gray-700 max-w-lg mb-8 leading-relaxed"
+            style={{ animation: "fadeInUp 0.4s ease-out both", animationDelay: "200ms" }}
+          >
             A production-grade NIDS with a 7-model ML ensemble, SHAP-explained alerts,
             real-time WebSocket dashboard, and full CLI control surface.
           </p>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3" style={{ animation: "fadeInUp 0.4s ease-out both", animationDelay: "300ms" }}>
             <button
               onClick={handleDemo}
               disabled={loading}
