@@ -30,7 +30,7 @@ from packetsentry.detection.transformer_ae import TransformerAEDetector
 from packetsentry.detection.xgboost_detector import XGBoostDetector
 from packetsentry.detection.zscore import ZScoreDetector
 from packetsentry.features.extractor import FeatureExtractor, FlowFeatures
-from packetsentry.features.flow_tracker import Flow, FlowTracker, ParsedPacket
+from packetsentry.features.flow_tracker import Flow, FlowTracker, ParsedPacket, flow_key as make_flow_key
 from packetsentry.features.preprocessor import FeaturePreprocessor
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,23 @@ class DetectionPipeline:
         # --- Features layer ---
         self._tracker = FlowTracker(timeout=flow_timeout)
         self._extractor = FeatureExtractor()
-        self._preprocessor = FeaturePreprocessor()
+
+        # Load saved preprocessor if available, otherwise start fresh.
+        _preprocessor_path = Path(__file__).parent.parent.parent / "models" / "preprocessor.pkl"
+        if _preprocessor_path.exists():
+            try:
+                self._preprocessor = FeaturePreprocessor.load(str(_preprocessor_path))
+                self._pp_fitted = True
+                logger.info("Loaded FeaturePreprocessor from %s", _preprocessor_path)
+            except Exception as exc:
+                logger.warning("Failed to load preprocessor (%s); starting fresh.", exc)
+                self._preprocessor = FeaturePreprocessor()
+                self._pp_fitted = False
+        else:
+            self._preprocessor = FeaturePreprocessor()
+            self._pp_fitted = False
+
         self._pp_fit_buffer: list[FlowFeatures] = []
-        self._pp_fitted = False
         self._pp_fit_threshold = 50
 
         # --- Detection layer (Gate 1 & 2) ---
@@ -120,11 +134,10 @@ class DetectionPipeline:
         self._packet_count += 1
         self._total_bytes += packet.length
 
-        flow_key = f"{packet.src_ip}:{packet.src_port}-{packet.dst_ip}:{packet.dst_port}"
+        flow_key = make_flow_key(packet.src_ip, packet.dst_ip, str(packet.protocol))
         if packet.payload:
-            self._payload_buffer[flow_key] = (
-                self._payload_buffer.get(flow_key, b"") + packet.payload
-            )
+            accumulated = self._payload_buffer.get(flow_key, b"") + packet.payload
+            self._payload_buffer[flow_key] = accumulated[:65536]
 
         completed_flow = self._tracker.add_packet(packet)
         if completed_flow is None:
@@ -156,9 +169,8 @@ class DetectionPipeline:
         # =====================================================================
         # GATE 1: DETERMINISTIC FILTER
         # =====================================================================
-        flow_key = f"{flow.src_ip}:{flow.src_port}-{flow.dst_ip}:{flow.dst_port}"
-        rev_key = f"{flow.dst_ip}:{flow.dst_port}-{flow.src_ip}:{flow.src_port}"
-        payload = self._payload_buffer.pop(flow_key, b"") + self._payload_buffer.pop(rev_key, b"")
+        flow_key = make_flow_key(flow.src_ip, flow.dst_ip, str(flow.protocol))
+        payload = self._payload_buffer.pop(flow_key, b"")
         
         if payload:
             matches = self._aho.search(payload)

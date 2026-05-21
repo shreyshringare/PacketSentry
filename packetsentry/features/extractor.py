@@ -23,6 +23,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import threading
 from collections import deque
 from dataclasses import dataclass
 
@@ -147,6 +148,7 @@ class FeatureExtractor:
         self._recent_by_conn: deque[tuple[str, int]] = deque(
             maxlen=conn_window,
         )
+        self._flows_lock = threading.Lock()
 
     def extract(self, flow: Flow) -> FlowFeatures:
         """Extract 23 features from a completed flow.
@@ -162,20 +164,21 @@ class FeatureExtractor:
         total_bytes = flow.src_bytes + flow.dst_bytes
         flags = self._count_flags(flow)
 
-        # Connection behaviour (before updating the window)
-        count, srv_count = self._time_based_counts(
-            flow.end_time, flow.dst_ip, flow.dst_port,
-        )
-        dst_host_count, dst_host_srv_count = self._conn_based_counts(
-            flow.dst_ip, flow.dst_port,
-        )
-        same_srv, diff_srv = self._service_rates(flow.dst_port)
+        with self._flows_lock:
+            # Connection behaviour (before updating the window)
+            count, srv_count = self._time_based_counts(
+                flow.end_time, flow.dst_ip, flow.dst_port,
+            )
+            dst_host_count, dst_host_srv_count = self._conn_based_counts(
+                flow.dst_ip, flow.dst_port,
+            )
+            same_srv, diff_srv = self._service_rates(flow.dst_port)
 
-        # Update the window AFTER computing features for this flow
-        self._recent_by_time.append(
-            (flow.end_time, flow.dst_ip, flow.dst_port),
-        )
-        self._recent_by_conn.append((flow.dst_ip, flow.dst_port))
+            # Update the window AFTER computing features for this flow
+            self._recent_by_time.append(
+                (flow.end_time, flow.dst_ip, flow.dst_port),
+            )
+            self._recent_by_conn.append((flow.dst_ip, flow.dst_port))
 
         return FlowFeatures(
             duration=duration,

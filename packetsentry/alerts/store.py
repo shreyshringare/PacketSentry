@@ -8,7 +8,7 @@ filtering by severity, paginating recent events).
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import duckdb
 
@@ -87,6 +87,29 @@ class DuckDBAlertStore:
         except Exception as e:
             logger.error(f"Failed to fetch recent alerts: {e}")
             return []
+
+    def get_alert_by_id(self, alert_id: str) -> Optional[dict[str, Any]]:
+        """Fetch a single alert by its ID directly from DuckDB.
+
+        Args:
+            alert_id: The UUID string identifying the alert.
+
+        Returns:
+            Dictionary of alert fields, or None if not found.
+        """
+        try:
+            cursor = self.conn.execute(
+                "SELECT * FROM alerts WHERE alert_id = ? LIMIT 1",
+                [alert_id]
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            columns = [desc[0] for desc in cursor.description]
+            return dict(zip(columns, row))
+        except Exception as e:
+            logger.error(f"Failed to fetch alert {alert_id}: {e}")
+            return None
 
     def get_stats_by_ip(self, hours: int = 24) -> list[dict[str, Any]]:
         """Get attack counts aggregated by source IP over the last N hours.

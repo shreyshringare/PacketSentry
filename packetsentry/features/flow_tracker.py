@@ -22,9 +22,28 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
+
+
+def flow_key(src_ip: str, dst_ip: str, proto: str) -> str:
+    """Return a canonical, direction-normalised string flow key.
+
+    The smaller IP is always placed first so that A→B and B→A produce
+    the same key.
+
+    Args:
+        src_ip: Source IP address string.
+        dst_ip: Destination IP address string.
+        proto: Protocol identifier string (e.g. "6", "17", "tcp").
+
+    Returns:
+        Canonical key string of the form ``"<smaller_ip>-<larger_ip>-<proto>"``.
+    """
+    a, b = (src_ip, dst_ip) if src_ip <= dst_ip else (dst_ip, src_ip)
+    return f"{a}-{b}-{proto}"
 
 
 @dataclass
@@ -86,7 +105,9 @@ class Flow:
     protocol: int
     start_time: float = 0.0
     end_time: float = 0.0
-    packets: list[ParsedPacket] = field(default_factory=list)
+    packets: deque[ParsedPacket] = field(
+        default_factory=lambda: deque(maxlen=1000)
+    )
     src_bytes: int = 0
     dst_bytes: int = 0
     flags: list[int] = field(default_factory=list)
@@ -127,7 +148,7 @@ class FlowTracker:
     def __init__(self, timeout: float = 60.0) -> None:
         self.timeout = timeout
         self._active: dict[tuple, Flow] = {}
-        self._completed: list[Flow] = []
+        self._completed: deque[Flow] = deque(maxlen=10000)
 
     @property
     def active_count(self) -> int:

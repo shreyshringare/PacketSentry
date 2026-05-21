@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -76,6 +77,9 @@ class AlertEngine:
             if time_since_last < self._dedup_seconds:
                 return  # Drop alert to avoid spam
 
+        if len(self._last_alert_time) > 50000:
+            self._evict_old()
+
         self._last_alert_time[src_ip] = now
 
         alert_id = str(uuid.uuid4())
@@ -85,8 +89,11 @@ class AlertEngine:
         shap_json = "{}"
         if result.explanation:
             shap_json = json.dumps({
-                "top_features": result.explanation.top_features,
-                "summary": result.explanation.summary
+                "top_features": [
+                    (name, float(val))
+                    for name, val in result.explanation.top_features
+                ],
+                "summary": result.explanation.explanation
             })
 
         alert_data = {
@@ -112,6 +119,16 @@ class AlertEngine:
                 embedding=embedding,
                 metadata={"src_ip": src_ip, "severity": severity, "timestamp": now.isoformat()}
             )
+
+    def _evict_old(self) -> None:
+        """Remove dedup entries older than 60 seconds to bound memory usage."""
+        cutoff = time.time() - 60.0
+        stale = [
+            ip for ip, ts in self._last_alert_time.items()
+            if ts.timestamp() < cutoff
+        ]
+        for ip in stale:
+            del self._last_alert_time[ip]
 
     def _get_severity(self, confidence: float) -> str:
         """Map a confidence score to a string severity."""
