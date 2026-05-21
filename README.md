@@ -30,8 +30,9 @@ Three commands to see live intrusion alerts:
 git clone https://github.com/shreyshringare/PacketSentry.git
 cd PacketSentry
 pip install -e .
-python scripts/generate_demo_pcap.py   # creates attack.pcap
-packetsentry replay attack.pcap --speed 0.0
+python scripts/generate_demo_pcap.py        # creates attack.pcap (SQLi, XSS, port scan)
+packetsentry replay attack.pcap --speed 0.0 # table output (default)
+packetsentry replay attack.pcap --output json | jq '.alerts[].severity'  # machine-readable
 ```
 
 Output:
@@ -119,6 +120,7 @@ python -m pytest tests/ -q
 - [Research References](#-research-references)
 - [Contributing](#-contributing)
 - [License](#-license)
+- [Architecture Deep-Dive](ARCHITECTURE.md)
 
 ---
 
@@ -131,8 +133,11 @@ PacketSentry takes a different approach:
 - 🔍 **Every alert is explainable** — SHAP feature attribution on every detection
 - 🧠 **7 complementary detectors** — signatures, supervised ML, unsupervised anomaly, temporal patterns, and graph topology analysis running simultaneously
 - 🔧 **Core algorithms built from scratch** — Aho-Corasick trie and GraphSAGE GNN with zero black-box library dependencies
-- 📊 **Self-calibrating** — false positive feedback automatically adjusts detector weights
+- 📊 **Self-calibrating** — adaptive ensemble weights: FP feedback depresses noisy detectors, TP recovery nudges them back (RECOVERY_RATE=0.05)
 - 🧬 **Attack memory** — ChromaDB stores 64-dim fingerprints of every alert for similarity search
+- 🖥 **Scriptable CLI** — `--output json` on all query commands, `--bpf` filter on replay, pipeable to `jq`/SIEM
+
+> See [ARCHITECTURE.md](ARCHITECTURE.md) for gate1→gate2 design rationale and adaptive weight math.
 
 > *"PacketSentry applies Zero Trust philosophy: every packet is treated as potentially malicious until it passes both signature verification AND anomaly scoring. The ensemble arbiter IS the verification layer."*
 
@@ -340,6 +345,23 @@ npm install && npm run dev
 - **Live Capture** — terminal control bar (`root@packetsentry:~$`), custom console dropdown, phosphor virtual scroll packet stream, polar threat radar, throughput chart.
 - **Alert Detail** — SHAP explanation waterfall (satisfying GDPR "right to explanation"), ChromaDB vector similarity search.
 - **Settings** — control panel sliders, alert thresholds, YAML signature files.
+
+### Replay with BPF Filter
+
+```bash
+packetsentry replay capture.pcap --bpf "tcp port 80"          # HTTP only
+packetsentry replay capture.pcap --bpf "src host 192.168.1.1"  # single host
+```
+
+### Headless / Scriptable Output
+
+```bash
+# Stream alerts as NDJSON — pipe to jq, grep, or SIEM
+packetsentry replay attack.pcap --output json | jq '.alerts[] | select(.severity=="CRITICAL")'
+
+# Live headless (no TUI)
+packetsentry live --interface eth0 --no-tui | tee alerts.jsonl
+```
 
 ### Benchmark Aho-Corasick vs Regex
 
