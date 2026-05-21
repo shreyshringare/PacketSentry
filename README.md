@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="#-quick-start"><img src="https://img.shields.io/badge/python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
-  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-241%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
+  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-294%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
   <a href="#-7-model-ensemble"><img src="https://img.shields.io/badge/ensemble-7%20models-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="Models"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>
   <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-70%25-yellow?style=for-the-badge" alt="Coverage"></a>
@@ -65,7 +65,7 @@ sudo packetsentry live --interface eth0
 
 ```bash
 python -m pytest tests/ -q
-# 241 passed ✅
+# 294 passed ✅
 ```
 
 ---
@@ -487,7 +487,7 @@ Every alert ships with a SHAP explanation. Top features driving attack classific
 | **Dashboard** | Textual 0.52 | Rich terminal UI with reactive updates |
 | **CLI** | Typer 0.12 | Type-hint driven, auto-generated `--help` |
 | **Training** | Optuna + SMOTE | Bayesian HPO + class imbalance handling |
-| **Testing** | pytest | 241 tests, 76% coverage |
+| **Testing** | pytest | 294 tests, 72% coverage |
 | **Linting** | Ruff | Replaces flake8 + black + isort |
 
 ---
@@ -500,9 +500,10 @@ Phase 2 — Dissectors + Flow + Features ......... 64 tests  ✅
 Phase 3 — XGB + RF + IF + ZS + Ensemble ........ 55 tests  ✅
 Phase 4 — Transformer AE + GNN + Storage ....... 42 tests  ✅
 Phase 5 — Pipeline + Capture + Alerts ........... 7 tests  ✅
+Phase 6 — Severity + TUI + Integration ......... 53 tests  ✅
 ──────────────────────────────────────────────────────────────
-TOTAL                                           241 tests  ✅
-Coverage                                            76%
+TOTAL                                           294 tests  ✅
+Coverage                                            72%
 ```
 
 ### 📊 Code Coverage

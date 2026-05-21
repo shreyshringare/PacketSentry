@@ -17,7 +17,7 @@
 14. ✅ Textual TUI dashboard
 15. ✅ Typer CLI (live, replay, alerts, bench)
 
-## Test suite: 241/241 passing ✅
+## Test suite: 294/294 passing ✅
 
 ## Critical rules
 - aho_corasick.py: NO external library. Trie + BFS failure function from scratch.
