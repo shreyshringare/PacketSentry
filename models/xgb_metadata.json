@@ -1,20 +1,7 @@
 {
   "model_file": "models\\xgb_nslkdd.json",
-  "dataset": "data\\nslkdd",
+  "dataset": "CICIDS-2017",
   "n_features": 23,
-  "n_training_samples": 134686,
-  "best_optuna_auc": 1.0,
-  "best_params": {
-    "max_depth": 8,
-    "learning_rate": 0.13907293914764376,
-    "n_estimators": 561,
-    "subsample": 0.9696820316208776,
-    "colsample_bytree": 0.7988836844123415,
-    "min_child_weight": 5,
-    "gamma": 0.1218922678428422
-  },
-  "train_time_sec": 4.1,
-  "seed": 42,
   "feature_names": [
     "duration",
     "protocol_type",
@@ -40,7 +27,18 @@
     "src_port",
     "dst_port"
   ],
-  "test_roc_auc": 0.9735,
-  "test_accuracy": 0.8037,
-  "test_samples": 22544
+  "n_training_samples": 4192968,
+  "best_optuna_auc": 0.9999,
+  "cv_f1": 0.9958,
+  "best_params": {
+    "max_depth": 10,
+    "learning_rate": 0.07596726586471543,
+    "n_estimators": 396,
+    "subsample": 0.9500780057555341,
+    "colsample_bytree": 0.7815202520227233,
+    "min_child_weight": 1,
+    "gamma": 0.07770104087772563
+  },
+  "train_time_sec": 50.1,
+  "seed": 42
 }
