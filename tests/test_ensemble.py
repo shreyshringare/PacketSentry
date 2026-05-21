@@ -149,3 +149,22 @@ class TestFeedback:
         arb = EnsembleArbiter()
         # Should not raise
         arb.feedback("nonexistent_detector", was_false_positive=True)
+
+    def test_fp_feedback_weight_recovers_after_true_positives(self) -> None:
+        """Weight should recover when detector stops generating FPs."""
+        arbiter = EnsembleArbiter()
+        initial_weight = arbiter.weights["xgboost"]
+
+        # Simulate 20 consecutive FPs — weight should drop
+        for _ in range(20):
+            arbiter.feedback("xgboost", was_false_positive=True)
+        depressed_weight = arbiter.weights["xgboost"]
+        assert depressed_weight < initial_weight
+
+        # Simulate 50 consecutive TPs — weight should recover above depressed level
+        for _ in range(50):
+            arbiter.feedback("xgboost", was_false_positive=False)
+        recovered_weight = arbiter.weights["xgboost"]
+        assert recovered_weight > depressed_weight, (
+            f"Weight should recover after TPs: {depressed_weight} → {recovered_weight}"
+        )

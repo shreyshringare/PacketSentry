@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _MIN_WEIGHT = 0.01  # no detector ever reaches zero
+_RECOVERY_RATE = 0.05   # how fast weight climbs back toward initial per TP
 _THRESHOLD = 0.50
 
 
@@ -76,6 +77,7 @@ class EnsembleArbiter:
             "gnn_detector":     0.15,
             "zscore":           0.08,
         }
+        self._initial_weights: dict[str, float] = dict(self.weights)
         # Ring buffer tracking recent FP/TP per detector (last 100)
         self._fp_tracker: dict[str, list[bool]] = {
             k: [] for k in self.weights
@@ -119,7 +121,8 @@ class EnsembleArbiter:
         """Adjust detector weight based on a confirmed outcome.
 
         Confirmed false positives reduce the detector's influence.
-        True positives do not increase weight (only FPs penalise).
+        True positives nudge the weight back toward its initial value
+        at ``_RECOVERY_RATE`` per call so detectors can recover.
 
         Args:
             detector: Detector name (must be a key in ``self.weights``).
@@ -140,7 +143,15 @@ class EnsembleArbiter:
 
         recent = self._fp_tracker[detector]
         fp_rate = sum(recent) / len(recent)
-        self.weights[detector] = max(_MIN_WEIGHT, 1.0 - fp_rate)
+        if was_false_positive:
+            # FPs pull weight toward (initial * (1 - fp_rate))
+            target = self._initial_weights[detector] * (1.0 - fp_rate)
+            self.weights[detector] = max(_MIN_WEIGHT, target)
+        else:
+            # TPs nudge weight back toward initial weight by RECOVERY_RATE
+            current = self.weights[detector]
+            initial = self._initial_weights[detector]
+            self.weights[detector] = min(initial, current + _RECOVERY_RATE * (initial - current))
         self._normalize()
 
         logger.info(
