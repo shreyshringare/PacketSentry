@@ -286,7 +286,7 @@ def extract_features_and_labels(
     # Assemble the 23-column matrix in FlowFeatures.to_vector() order
     X = np.column_stack([
         col("flow duration"),               # duration
-        col("protocol"),                    # protocol_type
+        np.zeros(len(df_norm), dtype=np.float32),  # protocol_type (not in CICIDS-2017 ML CSVs)
         col("total length of fwd packets"), # src_bytes
         col("total length of bwd packets"), # dst_bytes
         syn_count,                          # flag_syn
@@ -306,7 +306,7 @@ def extract_features_and_labels(
         rerror_rate,                        # rerror_rate
         np.zeros(len(df_norm), dtype=np.float32),  # same_srv_rate (not in CICIDS)
         np.zeros(len(df_norm), dtype=np.float32),  # diff_srv_rate (not in CICIDS)
-        col("source port"),                 # src_port
+        np.zeros(len(df_norm), dtype=np.float32),  # src_port (not in CICIDS-2017 ML CSVs)
         col("destination port"),            # dst_port
     ]).astype(np.float32)
 
