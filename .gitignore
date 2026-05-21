@@ -43,10 +43,9 @@ results/*.png
 results/*.json
 notebooks/.ipynb_checkpoints/
 
-# Models (large binary files — track with Git LFS or download separately)
-# Uncomment below if models are too large for GitHub:
-# models/*.json
-# models/*.pkl
+# Models (large binary files — retrain via scripts/train_cicids2017.py)
+# rf_nslkdd.pkl is 188 MB after CICIDS-2017 retraining — exceeds GitHub 100 MB limit
+models/*.pkl
 
 # DuckDB runtime data
 data/alerts.duckdb
