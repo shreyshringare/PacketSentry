@@ -1,53 +1,194 @@
-signatures:
+# PacketSentry signature rules — loaded by DetectionPipeline at startup.
+# Format: policies[] → type: payload_signature → patterns[]
+# Patterns are matched case-insensitively against raw packet payloads.
+
+policies:
+
+  # ── SQL Injection ────────────────────────────────────────────────────────
   - id: SIG-001
-    name: SQL Injection Attempt
+    name: SQL Injection
     severity: HIGH
+    type: payload_signature
     patterns:
-      - "SELECT * FROM"
+      - "' OR '1'='1"
+      - "' OR 1=1--"
       - "UNION SELECT"
-      - "OR 1=1"
+      - "UNION ALL SELECT"
+      - "SELECT * FROM"
       - "DROP TABLE"
+      - "'; DROP"
       - "'; --"
-    protocol: HTTP
+      - "1' AND SLEEP("
+      - "WAITFOR DELAY"
+      - "BENCHMARK("
+      - "LOAD_FILE("
+      - "INTO OUTFILE"
+      - "information_schema"
+      - "sys.tables"
 
+  # ── Cross-Site Scripting (XSS) ───────────────────────────────────────────
   - id: SIG-002
-    name: Port Scan Detection
-    severity: MEDIUM
-    patterns:
-      - "\x00\x00\x00\x00"
-    protocol: TCP
-    threshold: 10
-
-  - id: SIG-003
-    name: DNS Tunneling
-    severity: HIGH
-    patterns:
-      - ".onion"
-      - "base64"
-    protocol: DNS
-
-  - id: SIG-004
     name: XSS Attempt
     severity: HIGH
+    type: payload_signature
     patterns:
       - "<script>"
+      - "</script>"
       - "javascript:"
       - "onerror="
-    protocol: HTTP
+      - "onload="
+      - "onfocus="
+      - "onmouseover="
+      - "eval("
+      - "document.cookie"
+      - "window.location"
+      - "innerHTML="
+      - "<img src=x"
+      - "alert(1)"
+      - "String.fromCharCode("
 
-  - id: SIG-005
-    name: Directory Traversal
+  # ── Command Injection ────────────────────────────────────────────────────
+  - id: SIG-003
+    name: Command Injection
+    severity: CRITICAL
+    type: payload_signature
+    patterns:
+      - "; /bin/sh"
+      - "| /bin/bash"
+      - "| cmd.exe"
+      - "cmd.exe /c"
+      - "powershell -e"
+      - "powershell -enc"
+      - "powershell -nop"
+      - "/bin/sh -i"
+      - "nc -e /bin/sh"
+      - "bash -i >& /dev/tcp"
+      - "python -c 'import socket"
+      - "perl -e 'use Socket"
+
+  # ── Path Traversal / LFI ─────────────────────────────────────────────────
+  - id: SIG-004
+    name: Path Traversal
     severity: HIGH
+    type: payload_signature
     patterns:
       - "../../../"
       - "..\\..\\..\\"
       - "%2e%2e%2f"
-    protocol: HTTP
+      - "%252e%252e%252f"
+      - "..%2f"
+      - "..%5c"
+      - "/etc/passwd"
+      - "/etc/shadow"
+      - "/proc/self/environ"
+      - "C:\\Windows\\System32"
+      - "boot.ini"
+      - "win.ini"
 
-  - id: SIG-006
-    name: Brute Force SSH
+  # ── Remote Code Execution ────────────────────────────────────────────────
+  - id: SIG-005
+    name: RCE Patterns
     severity: CRITICAL
+    type: payload_signature
     patterns:
-      - "SSH-2.0"
-    protocol: TCP
-    threshold: 20
+      - "wget http"
+      - "curl http"
+      - "curl -s http"
+      - "curl -o "
+      - "chmod +x "
+      - "./exploit"
+      - "msfvenom"
+      - "meterpreter"
+      - "/tmp/backdoor"
+      - "base64 -d |"
+      - "echo | base64 --decode"
+
+  # ── Log4Shell (CVE-2021-44228) ───────────────────────────────────────────
+  - id: SIG-006
+    name: Log4Shell
+    severity: CRITICAL
+    type: payload_signature
+    patterns:
+      - "${jndi:ldap://"
+      - "${jndi:rmi://"
+      - "${jndi:dns://"
+      - "${${lower:j}ndi:"
+      - "${${::-j}${::-n}${::-d}${::-i}:"
+      - "jndi:ldap"
+
+  # ── Shellshock (CVE-2014-6271) ───────────────────────────────────────────
+  - id: SIG-007
+    name: Shellshock
+    severity: CRITICAL
+    type: payload_signature
+    patterns:
+      - "() { :; };"
+      - "() { ignored; };"
+      - "() {"
+
+  # ── DNS Tunneling / Exfil ────────────────────────────────────────────────
+  - id: SIG-008
+    name: DNS Tunneling
+    severity: HIGH
+    type: payload_signature
+    patterns:
+      - ".onion"
+      - "dnscat"
+      - "iodine"
+      - "dns2tcp"
+
+  # ── SSH Brute Force ──────────────────────────────────────────────────────
+  - id: SIG-009
+    name: SSH Brute Force
+    severity: CRITICAL
+    type: payload_signature
+    patterns:
+      - "SSH-2.0-libssh"
+      - "SSH-2.0-paramiko"
+      - "SSH-2.0-Go"
+      - "SSH-2.0-JSCH"
+
+  # ── Web Shell Detection ──────────────────────────────────────────────────
+  - id: SIG-010
+    name: Web Shell
+    severity: CRITICAL
+    type: payload_signature
+    patterns:
+      - "eval(base64_decode"
+      - "eval(gzinflate"
+      - "eval(str_rot13"
+      - "system($_GET"
+      - "system($_POST"
+      - "passthru($_GET"
+      - "exec($_REQUEST"
+      - "shell_exec($_GET"
+      - "<?php eval("
+      - "b374k"
+      - "c99shell"
+      - "r57shell"
+
+  # ── SSRF ─────────────────────────────────────────────────────────────────
+  - id: SIG-011
+    name: SSRF Attempt
+    severity: HIGH
+    type: payload_signature
+    patterns:
+      - "169.254.169.254"
+      - "metadata.google.internal"
+      - "169.254.170.2"
+      - "http://localhost"
+      - "http://127.0.0.1"
+      - "http://[::1]"
+      - "file:///etc/passwd"
+
+  # ── XXE ──────────────────────────────────────────────────────────────────
+  - id: SIG-012
+    name: XXE Injection
+    severity: HIGH
+    type: payload_signature
+    patterns:
+      - "<!ENTITY"
+      - "SYSTEM \"file://"
+      - "SYSTEM \"http://"
+      - "<!DOCTYPE foo [<!ENTITY"
+      - "%xxe;"
