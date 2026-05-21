@@ -1,0 +1,29 @@
+# PacketSentry CLI — docker compose
+#
+# Replay mode (no privileges needed):
+#   docker compose run --rm cli replay /pcaps/attack.pcap
+#
+# Live capture (requires host network + NET_ADMIN):
+#   docker compose run --rm cli-live live --interface eth0
+#
+# View alerts:
+#   docker compose run --rm cli alerts
+
+services:
+  cli:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    command: ["--help"]
+
+  cli-live:
+    build: .
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    command: ["live"]
