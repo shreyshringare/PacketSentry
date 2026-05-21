@@ -7,8 +7,10 @@ interface AuthState {
   role: "admin" | "demo" | null;
   isAuthenticated: boolean;
   isDemo: boolean;
+  _hasHydrated: boolean;
   login: (token: string, role: "admin" | "demo") => void;
   logout: () => void;
+  setHasHydrated: (v: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -18,10 +20,12 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       isAuthenticated: false,
       isDemo: false,
+      _hasHydrated: false,
       login: (token, role) =>
         set({ token, role, isAuthenticated: true, isDemo: role === "demo" }),
       logout: () =>
         set({ token: null, role: null, isAuthenticated: false, isDemo: false }),
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
     }),
     {
       name: "packetsentry-auth-v2",
@@ -35,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
           state.isAuthenticated = true;
           state.isDemo = false;
         }
+        state?.setHasHydrated(true);
       },
     }
   )

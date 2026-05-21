@@ -84,7 +84,13 @@ function Dashboard() {
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
   const [view, setView] = React.useState<"landing" | "login">("landing");
+
+  // Wait for persisted auth to rehydrate before deciding which screen to show.
+  // Without this, returning admin users see a flash of landing page; with it,
+  // fresh visitors always land on the landing page (not the dashboard).
+  if (!hasHydrated) return null;
 
   if (isAuthenticated) return <Dashboard />;
   if (view === "login") return <Login onBack={() => setView("landing")} />;
