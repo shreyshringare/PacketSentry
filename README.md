@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="docs/banner.png" alt="PacketSentry Banner" width="100%">
-</p>
+
 
 <h1 align="center">🛡️ PacketSentry</h1>
 
@@ -75,7 +73,7 @@ python -m pytest tests/ -q
 
 | | URL |
 |---|---|
-| **Dashboard** | https://packet-sentry.vercel.app |
+| **Dashboard** | [https://packet-sentry.vercel.app](https://packet-sentry-git-main-shreyas-shringares-projects.vercel.app/) |
 | **Backend API** | https://packetsentry-production.up.railway.app |
 | **API Docs** | https://packetsentry-production.up.railway.app/docs |
 
