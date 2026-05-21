@@ -6,9 +6,9 @@ import { PixelShield } from "../components/PixelIcons";
 import { Footer } from "../components/Footer";
 
 const STATS = [
-  { value: "7", label: "ML Models", sub: "Ensemble inference" },
-  { value: "241", label: "Tests Passing", sub: "Full coverage" },
-  { value: "99%", label: "NSL-KDD F1", sub: "Benchmark dataset" },
+  { value: "7", label: "ML Models", sub: "Confidence-weighted ensemble" },
+  { value: "O(n)", label: "Pattern Match", sub: "Aho-Corasick from scratch" },
+  { value: "100%", label: "SHAP Coverage", sub: "Every alert explained" },
   { value: "<1ms", label: "Alert Latency", sub: "Per-packet scoring" },
 ];
 
@@ -201,22 +201,16 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
         {/* ── Tech stack ─────────────────────────────── */}
         <section className="px-6 pb-12">
           <div className="max-w-4xl mx-auto">
-            <p className="font-mono text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-6 text-center">
+            <p className="font-mono text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-4 text-center">
               // TECH STACK
             </p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="bg-black border-2 border-black p-5 font-mono text-[11px]">
+              <div className="text-gray-500 mb-3 text-[10px]">$ cat stack.conf</div>
               {STACK_GROUPS.map((g) => (
-                <div key={g.group} className="bg-white border-2 border-black">
-                  <div className="bg-black text-[#00FF41] font-mono text-[10px] tracking-widest px-3 py-1.5 uppercase">
-                    {g.group}
-                  </div>
-                  <ul className="divide-y divide-gray-100">
-                    {g.items.map((item) => (
-                      <li key={item} className="px-3 py-2 font-mono text-[11px] text-gray-700">
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+                <div key={g.group} className="flex gap-0 mb-2 last:mb-0">
+                  <span className="text-[#00FF41] w-28 shrink-0 uppercase tracking-widest text-[10px] pt-px">{g.group}</span>
+                  <span className="text-gray-400 mr-2 shrink-0">:</span>
+                  <span className="text-gray-200">{g.items.join(" · ")}</span>
                 </div>
               ))}
             </div>

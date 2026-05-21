@@ -37,6 +37,18 @@ export function Overview() {
     }
   }
 
+  const ensembleScores = selectedAlert
+    ? {
+        aho_corasick: selectedAlert.detectors?.includes("AhoCorasick") ? selectedAlert.confidence : 0,
+        xgboost: selectedAlert.detectors?.includes("XGBoost") ? selectedAlert.confidence : 0,
+        gnn_detector: selectedAlert.detectors?.includes("GNN") ? selectedAlert.confidence : 0,
+        transformer_ae: selectedAlert.detectors?.includes("TransformerAE") ? selectedAlert.confidence : 0,
+        isolation_forest: selectedAlert.detectors?.includes("IsolationForest") ? selectedAlert.confidence : 0,
+        zscore: selectedAlert.detectors?.includes("ZScore") ? selectedAlert.confidence : 0,
+        random_forest: selectedAlert.detectors?.includes("RandomForest") ? selectedAlert.confidence : 0,
+      }
+    : undefined;
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <StatCards />
@@ -82,7 +94,7 @@ export function Overview() {
               <FlowTable />
             </div>
           </div>
-          <EnsemblePanel scores={selectedAlert?.shap ? undefined : undefined} />
+          <EnsemblePanel scores={ensembleScores} />
         </div>
         {/* Right: alert feed */}
         <div className="w-72 bg-white border-2 border-black shadow-brutalist overflow-hidden">

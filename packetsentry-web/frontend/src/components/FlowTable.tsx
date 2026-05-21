@@ -12,8 +12,8 @@ function ScoreBar({ score }: { score: number }) {
     score >= 0.8 ? "bg-red-500" : score >= 0.5 ? "bg-amber-400" : "bg-green-400";
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${score * 100}%` }} />
+      <div className="w-16 h-1.5 bg-gray-100 overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${score * 100}%` }} />
       </div>
       <span
         className={`text-xs font-mono ${
@@ -55,7 +55,7 @@ export function FlowTable() {
               <td className="px-3 py-1.5 text-gray-500">{flow.proto}</td>
               <td className="px-3 py-1.5"><ScoreBar score={flow.score} /></td>
               <td className="px-3 py-1.5">
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${SEVERITY_CLS[flow.severity] ?? "bg-gray-100 text-gray-600"}`}>
+                <span className={`px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${SEVERITY_CLS[flow.severity] ?? "bg-gray-100 text-gray-600"}`}>
                   {flow.severity}
                 </span>
               </td>
@@ -66,8 +66,8 @@ export function FlowTable() {
           ))}
           {flows.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-3 py-6 text-center text-gray-400 text-xs">
-                No active flows — start capture to see live data
+              <td colSpan={6} className="px-3 py-8 text-left font-mono text-[11px] text-gray-500">
+                <span className="terminal-cursor">[&gt;] NO FLOWS DETECTED — run packetsentry live or replay a PCAP</span>
               </td>
             </tr>
           )}
