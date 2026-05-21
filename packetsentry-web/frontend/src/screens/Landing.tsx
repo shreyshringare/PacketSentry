@@ -54,6 +54,14 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
     }
   }
 
+  function handleOfflineDemo() {
+    // Mint a synthetic demo token and enter the dashboard.
+    // useDemoAlerts() in App.tsx will detect the backend is offline
+    // and load MOCK_ALERTS / MOCK_FLOWS / MOCK_STATS automatically.
+    login("offline-demo", "demo");
+    onLogin();
+  }
+
   return (
     <div className="min-h-screen bg-[#C0C0C0] flex flex-col">
 
@@ -124,9 +132,17 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
           </div>
 
           {demoError && (
-            <p className="text-red-600 font-mono text-[10px] border border-red-600 px-3 py-1 mt-2">
-              [ERR] {demoError}
-            </p>
+            <div className="flex flex-col items-center gap-2 mt-2">
+              <p className="text-red-600 font-mono text-[10px] border border-red-600 px-3 py-1">
+                [ERR] {demoError}
+              </p>
+              <button
+                onClick={handleOfflineDemo}
+                className="border-2 border-black bg-black text-[#00FF41] font-mono text-[10px] uppercase tracking-widest px-4 py-1.5 hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
+              >
+                Load Demo Data Offline →
+              </button>
+            </div>
           )}
 
           <p className="text-[9px] font-mono text-gray-500 mt-3 tracking-wide">
