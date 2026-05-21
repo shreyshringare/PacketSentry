@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="#-quick-start"><img src="https://img.shields.io/badge/python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
-  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-246%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
+  <a href="#-test-suite"><img src="https://img.shields.io/badge/tests-241%20passing-00C853?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests"></a>
   <a href="#-7-model-ensemble"><img src="https://img.shields.io/badge/ensemble-7%20models-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="Models"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>
   <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-70%25-yellow?style=for-the-badge" alt="Coverage"></a>
@@ -30,6 +30,7 @@ Three commands to see live intrusion alerts:
 git clone https://github.com/shreyshringare/PacketSentry.git
 cd PacketSentry
 pip install -e .
+python scripts/generate_demo_pcap.py   # creates attack.pcap
 packetsentry replay attack.pcap --speed 0.0
 ```
 
@@ -440,6 +441,8 @@ packetsentry/
 > XGBoost 5-fold CV F1 = 0.999 on KDDTrain+; test F1 = 0.784 on KDDTest+. Gap reflects the known NSL-KDD train→test distribution shift — KDDTest+ contains novel attack subtypes absent from the training set, a documented property of the dataset.
 >
 > Reproduce: `python scripts/evaluate_all.py --dataset data/nslkdd/ --output results/`
+
+> **Note:** TransformerAE and GNN benchmarks require running `python scripts/evaluate_all.py run --dataset data/nslkdd/` locally (5–10 min). Output saved to `results/metrics_summary.json`.
 
 ### SHAP Feature Attribution
 
