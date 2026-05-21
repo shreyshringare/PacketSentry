@@ -104,3 +104,18 @@ class TestAlertEngine:
         # Second call with identical (src_ip, dst_ip, dst_port) within cooldown → suppressed
         engine.process(result, _feat(), "1.1.1.1", "2.2.2.2", 80)
         assert engine.db_store.insert_alert.call_count == 1
+
+    def test_periodic_eviction_removes_stale_entries(self, engine) -> None:
+        """Entries older than dedup_seconds are evicted on next process() call."""
+        result = DecisionResult(is_alert=True, confidence=0.8, scores={}, explanation=None)
+
+        # Manually insert a stale entry (timestamped 120s ago)
+        stale_key = ("10.0.0.1", "10.0.0.2", 80)
+        engine._last_alert_time[stale_key] = datetime.now() - timedelta(seconds=120)
+        engine._last_eviction = datetime.now() - timedelta(seconds=120)  # force eviction
+
+        # Trigger a process() call with a different flow
+        engine.process(result, _feat(), "10.0.0.99", "10.0.0.2", 443)
+
+        # Stale entry should be gone
+        assert stale_key not in engine._last_alert_time

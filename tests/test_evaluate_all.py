@@ -28,10 +28,10 @@ def test_severity_from_confidence():
     sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
     from evaluate_all import severity_from_confidence
 
-    assert severity_from_confidence(0.9) == "CRITICAL"
-    assert severity_from_confidence(0.7) == "HIGH"
-    assert severity_from_confidence(0.55) == "MED"
-    assert severity_from_confidence(0.2) == "LOW"
+    assert severity_from_confidence(0.95) == "CRITICAL"
+    assert severity_from_confidence(0.80) == "HIGH"
+    assert severity_from_confidence(0.65) == "MED"
+    assert severity_from_confidence(0.30) == "LOW"
 
 
 def test_compute_metrics_shape():

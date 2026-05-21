@@ -37,6 +37,9 @@ from sklearn.metrics import (
     roc_curve,
 )
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from packetsentry.alerts.severity import confidence_to_severity as severity_from_confidence  # noqa: E402
+
 logger = logging.getLogger(__name__)
 app = typer.Typer(help="Evaluate all PacketSentry models on NSL-KDD.")
 
@@ -101,15 +104,6 @@ def load_nslkdd(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return X, y, y_multi
 
 
-def severity_from_confidence(conf: float) -> str:
-    """Map confidence score → severity label."""
-    if conf >= 0.80:
-        return "CRITICAL"
-    if conf >= 0.60:
-        return "HIGH"
-    if conf >= 0.40:
-        return "MED"
-    return "LOW"
 
 
 # ── T3: Metrics + XGBoost ────────────────────────────────────────────────────
@@ -251,7 +245,6 @@ def eval_gnn(
     GNN autoencoder trained on normal graph, scored on attack flows.
     Returns binary classification metrics over the synthetic dataset.
     """
-    sys.path.insert(0, str(Path(__file__).parent.parent))
     from packetsentry.detection.gnn_detector import GNNDetector
 
     logger.info("Benchmarking GNN on synthetic topology (port-scan + DDoS)...")
@@ -326,7 +319,6 @@ def eval_gnn(
 
 def _array_to_flow_features(row: np.ndarray):
     """Convert a 23-element NSL-KDD array to a FlowFeatures-compatible object."""
-    sys.path.insert(0, str(Path(__file__).parent.parent))
     from packetsentry.features.extractor import FlowFeatures
 
     ff = types.SimpleNamespace()
@@ -347,7 +339,6 @@ def eval_transformer_ae(
     seed: int = 42,
 ) -> tuple[dict, np.ndarray]:
     """Evaluate TransformerAEDetector by online-training on normal traffic."""
-    sys.path.insert(0, str(Path(__file__).parent.parent))
     from packetsentry.detection.transformer_ae import TransformerAEDetector
 
     logger.info("Evaluating TransformerAE (online warm-up on %d normal rows)...", warmup_rows)

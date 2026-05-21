@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 import uuid
 from datetime import datetime
 from typing import Optional
 
+from packetsentry.alerts.severity import confidence_to_severity
 from packetsentry.alerts.store import DuckDBAlertStore
 from packetsentry.detection.ensemble import DecisionResult
 from packetsentry.features.extractor import FlowFeatures
@@ -46,6 +46,7 @@ class AlertEngine:
 
         # Maps (src_ip, dst_ip, dst_port) -> timestamp of last alert
         self._last_alert_time: dict[tuple[str, str, int], datetime] = {}
+        self._last_eviction: datetime = datetime.now()
 
     def process(
         self,
@@ -78,8 +79,10 @@ class AlertEngine:
             if time_since_last < self._dedup_seconds:
                 return  # Drop alert to avoid spam
 
-        if len(self._last_alert_time) > 50000:
+        # Evict stale entries every dedup_seconds regardless of size
+        if (now - self._last_eviction).total_seconds() >= self._dedup_seconds:
             self._evict_old()
+            self._last_eviction = now
 
         self._last_alert_time[flow_key] = now
 
@@ -122,22 +125,15 @@ class AlertEngine:
             )
 
     def _evict_old(self) -> None:
-        """Remove dedup entries older than 60 seconds to bound memory usage."""
-        cutoff = time.time() - 60.0
+        """Remove dedup entries older than dedup_seconds to bound memory usage."""
+        cutoff = datetime.now().timestamp() - self._dedup_seconds
         stale = [
-            ip for ip, ts in self._last_alert_time.items()
+            key for key, ts in self._last_alert_time.items()
             if ts.timestamp() < cutoff
         ]
-        for ip in stale:
-            del self._last_alert_time[ip]
+        for key in stale:
+            del self._last_alert_time[key]
 
     def _get_severity(self, confidence: float) -> str:
         """Map a confidence score to a string severity."""
-        if confidence >= 0.90:
-            return "CRITICAL"
-        elif confidence >= 0.75:
-            return "HIGH"
-        elif confidence >= 0.60:
-            return "MED"
-        else:
-            return "LOW"
+        return confidence_to_severity(confidence)
