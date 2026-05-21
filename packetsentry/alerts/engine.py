@@ -44,8 +44,8 @@ class AlertEngine:
         self.embedding_extractor = embedding_extractor
         self._dedup_seconds = dedup_seconds
 
-        # Maps source IP -> timestamp of last alert
-        self._last_alert_time: dict[str, datetime] = {}
+        # Maps (src_ip, dst_ip, dst_port) -> timestamp of last alert
+        self._last_alert_time: dict[tuple[str, str, int], datetime] = {}
 
     def process(
         self,
@@ -72,15 +72,16 @@ class AlertEngine:
         now = datetime.now()
 
         # Deduplication check
-        if src_ip in self._last_alert_time:
-            time_since_last = (now - self._last_alert_time[src_ip]).total_seconds()
+        flow_key = (src_ip, dst_ip, dst_port)
+        if flow_key in self._last_alert_time:
+            time_since_last = (now - self._last_alert_time[flow_key]).total_seconds()
             if time_since_last < self._dedup_seconds:
                 return  # Drop alert to avoid spam
 
         if len(self._last_alert_time) > 50000:
             self._evict_old()
 
-        self._last_alert_time[src_ip] = now
+        self._last_alert_time[flow_key] = now
 
         alert_id = str(uuid.uuid4())
         severity = self._get_severity(result.confidence)

@@ -80,3 +80,27 @@ class TestAlertEngine:
         # Call from a different IP should be processed
         engine.process(result, _feat(), "3.3.3.3", "2.2.2.2", 80)
         assert engine.db_store.insert_alert.call_count == 2
+
+    def test_dedup_different_dst_port_not_suppressed(self, engine) -> None:
+        """Same src_ip to two different ports → two alerts fired."""
+        result = DecisionResult(is_alert=True, confidence=0.8, scores={}, explanation=None)
+
+        # First call: src 1.1.1.1 → dst 2.2.2.2:80
+        engine.process(result, _feat(), "1.1.1.1", "2.2.2.2", 80)
+        assert engine.db_store.insert_alert.call_count == 1
+
+        # Second call: same src_ip, same dst_ip, different dst_port → must NOT be suppressed
+        engine.process(result, _feat(), "1.1.1.1", "2.2.2.2", 443)
+        assert engine.db_store.insert_alert.call_count == 2
+
+    def test_dedup_same_flow_suppressed(self, engine) -> None:
+        """Same (src, dst, port) within cooldown → only one alert."""
+        result = DecisionResult(is_alert=True, confidence=0.8, scores={}, explanation=None)
+
+        # First call fires
+        engine.process(result, _feat(), "1.1.1.1", "2.2.2.2", 80)
+        assert engine.db_store.insert_alert.call_count == 1
+
+        # Second call with identical (src_ip, dst_ip, dst_port) within cooldown → suppressed
+        engine.process(result, _feat(), "1.1.1.1", "2.2.2.2", 80)
+        assert engine.db_store.insert_alert.call_count == 1
