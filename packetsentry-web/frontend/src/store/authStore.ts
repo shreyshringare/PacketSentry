@@ -28,10 +28,17 @@ export const useAuthStore = create<AuthState>()(
       // Only persist token + role across page refreshes
       partialize: (s: AuthState) => ({ token: s.token, role: s.role }),
       onRehydrateStorage: () => (state) => {
-        // Recompute derived booleans after rehydration
-        if (state?.token && state?.role) {
+        // Demo tokens are ephemeral — never restore a demo session across page loads.
+        // Admin tokens are long-lived and may be restored.
+        if (state?.token && state?.role === "admin") {
           state.isAuthenticated = true;
-          state.isDemo = state.role === "demo";
+          state.isDemo = false;
+        } else {
+          // Clear any stale demo session
+          state!.token = null;
+          state!.role = null;
+          state!.isAuthenticated = false;
+          state!.isDemo = false;
         }
       },
     }

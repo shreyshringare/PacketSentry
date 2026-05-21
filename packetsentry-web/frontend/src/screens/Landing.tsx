@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { PixelShield } from "../components/PixelIcons";
+import { Footer } from "../components/Footer";
 
 const STATS = [
   { value: "7", label: "ML Models", sub: "Ensemble inference" },
@@ -183,14 +184,7 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
       </main>
 
       {/* ── Footer ─────────────────────────────────── */}
-      <footer className="border-t-2 border-black bg-black py-3 px-6 flex items-center justify-between shrink-0">
-        <span className="font-mono text-[9px] text-[#00FF41] tracking-widest uppercase">
-          PacketSentry // NIDS v1.0
-        </span>
-        <span className="font-mono text-[9px] text-gray-500 tracking-wide">
-          241 tests · 7 models · SHAP-explained
-        </span>
-      </footer>
+      <Footer variant="landing" />
 
     </div>
   );

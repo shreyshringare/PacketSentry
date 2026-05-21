@@ -1,6 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopNav } from "./components/TopNav";
+import { Footer } from "./components/Footer";
 import { Overview } from "./screens/Overview";
 import { LiveCapture } from "./screens/LiveCapture";
 import { AlertDetail } from "./screens/AlertDetail";
@@ -67,6 +68,7 @@ function Dashboard() {
       {activeScreen === "live" && <LiveCapture />}
       {activeScreen === "alerts" && <AlertDetail />}
       {activeScreen === "settings" && <Settings />}
+      <Footer variant="dashboard" />
     </div>
   );
 }
