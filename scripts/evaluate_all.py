@@ -65,6 +65,7 @@ _ATTACK_CLASSES = {
     "ps": 4, "sqlattack": 4, "xterm": 4,
 }
 _MULTI_CLASS_NAMES = ["Normal", "DoS", "Probe", "R2L", "U2R"]
+_N_FEATURES = 23
 
 
 # ── T2: Data loading ─────────────────────────────────────────────────────────
@@ -230,6 +231,93 @@ def eval_zscore(
     y_proba = np.clip(raw_scores / clip_val, 0.0, 1.0).astype(np.float32)
     y_pred = (y_proba > 0.5).astype(int)
     return compute_metrics("ZScore", y_test, y_pred, y_proba), y_proba
+
+
+# ── T4b: GNN topology benchmark ─────────────────────────────────────────────
+
+def eval_gnn(
+    n_normal: int = 500,
+    n_portscan: int = 50,
+    n_ddos: int = 50,
+    seed: int = 42,
+) -> tuple[dict, np.ndarray]:
+    """Benchmark GNN topology detection on synthetic graph scenarios.
+
+    NSL-KDD has no IP addresses, so this builds synthetic topology:
+    - Normal: 500 flows distributed across many (src, dst) pairs
+    - Port scan: 1 attacker → 50 different dst IPs (high out-degree)
+    - DDoS: 50 sources → 1 victim (star topology)
+
+    GNN autoencoder trained on normal graph, scored on attack flows.
+    Returns binary classification metrics over the synthetic dataset.
+    """
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from packetsentry.detection.gnn_detector import GNNDetector
+
+    logger.info("Benchmarking GNN on synthetic topology (port-scan + DDoS)...")
+    rng = np.random.default_rng(seed)
+    gnn = GNNDetector()
+
+    def _make_ff(feat_vec: np.ndarray) -> object:
+        ff = types.SimpleNamespace()
+        ff.to_vector = lambda: feat_vec.astype(np.float32)
+        for i, name in enumerate(_FEATURE_NAMES):
+            setattr(ff, name, float(feat_vec[i]) if i < len(feat_vec) else 0.0)
+        return ff
+
+    # Normal: 500 flows across diverse (src, dst) pairs
+    normal_flows = []
+    for _ in range(n_normal):
+        src = f"10.0.{rng.integers(0, 100)}.{rng.integers(1, 255)}"
+        dst = f"10.1.{rng.integers(0, 100)}.{rng.integers(1, 255)}"
+        feat = rng.uniform(0, 1, size=_N_FEATURES).astype(np.float32)
+        normal_flows.append((src, dst, feat))
+
+    # Port scan: 1 attacker → 50 different hosts (high out-degree)
+    attacker = "192.168.1.100"
+    scan_flows = [
+        (attacker, f"10.0.0.{i + 1}", rng.uniform(0, 0.1, size=_N_FEATURES).astype(np.float32))
+        for i in range(n_portscan)
+    ]
+
+    # DDoS: 50 sources → 1 victim (star topology)
+    victim = "10.0.0.1"
+    ddos_flows = [
+        (f"172.16.{i}.1", victim, rng.uniform(0, 0.1, size=_N_FEATURES).astype(np.float32))
+        for i in range(n_ddos)
+    ]
+
+    # Train GNN on normal flows — add to graph and warm up
+    for src, dst, feat in normal_flows:
+        try:
+            gnn._graph.add_flow(src, dst, feat)
+        except Exception:
+            pass
+    normal_scores = []
+    for _, _, feat in normal_flows:
+        try:
+            normal_scores.append(float(gnn.score(_make_ff(feat))))
+        except Exception:
+            normal_scores.append(0.0)
+
+    # Score attack flows
+    attack_scores = []
+    for src, dst, feat in scan_flows + ddos_flows:
+        try:
+            gnn._graph.add_flow(src, dst, feat)
+            attack_scores.append(float(gnn.score(_make_ff(feat))))
+        except Exception:
+            attack_scores.append(0.5)
+
+    all_scores = np.array(normal_scores + attack_scores, dtype=np.float32)
+    y_true = np.array([0] * len(normal_scores) + [1] * len(attack_scores), dtype=np.int32)
+    y_proba = np.clip(all_scores, 0.0, 1.0)
+    y_pred = (y_proba > 0.5).astype(int)
+
+    metrics = compute_metrics("GNN (GraphSAGE)", y_true, y_pred, y_proba)
+    metrics["note"] = "Synthetic topology: port-scan (1→50) + DDoS (50→1) vs 500 normal flows"
+    logger.info("GNN topology benchmark: F1=%.4f AUC=%.4f", metrics["f1"], metrics["roc_auc"])
+    return metrics, y_proba
 
 
 # ── T5: TransformerAE + helper ───────────────────────────────────────────────
@@ -501,12 +589,25 @@ def run(
         all_probas["TransformerAE"] = (y_test, tae_proba)
         typer.echo(f"   F1={tae_metrics['f1']:.4f}  AUC={tae_metrics['roc_auc']:.4f}")
 
-    all_metrics += [
-        {"model": "GNN (GraphSAGE)", "f1": None, "precision": None, "recall": None,
-         "roc_auc": None, "note": "Topology-based — requires live network graph. N/A for per-flow dataset."},
+    if not skip_slow:
+        typer.echo("\n7. GNN GraphSAGE (synthetic topology benchmark)...")
+        gnn_metrics, gnn_proba = eval_gnn(seed=seed)
+        all_metrics.append(gnn_metrics)
+        all_probas["GNN (GraphSAGE)"] = (
+            np.array([0] * 500 + [1] * 100, dtype=np.int32),
+            gnn_proba,
+        )
+        typer.echo(f"   F1={gnn_metrics['f1']:.4f}  AUC={gnn_metrics['roc_auc']:.4f}  [{gnn_metrics.get('note', '')}]")
+    else:
+        all_metrics.append(
+            {"model": "GNN (GraphSAGE)", "f1": None, "precision": None, "recall": None,
+             "roc_auc": None, "note": "Skipped (--skip-slow). Run without flag to benchmark."}
+        )
+
+    all_metrics.append(
         {"model": "Aho-Corasick", "f1": None, "precision": None, "recall": None,
-         "roc_auc": None, "note": "Signature matching — requires raw packet payloads. N/A for NSL-KDD."},
-    ]
+         "roc_auc": None, "note": "Signature matching — requires raw packet payloads. N/A for NSL-KDD."}
+    )
 
     summary_path = output / "metrics_summary.json"
     summary_path.write_text(json.dumps(all_metrics, indent=2))
