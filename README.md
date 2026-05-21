@@ -31,6 +31,8 @@
 > Click **TRY DEMO** on the dashboard — no login required. Pre-recorded attack alerts with full SHAP attribution.  
 > Admin login available with credentials from the project owner.
 
+> **⚠️ Cloud limitation:** Live packet capture requires raw socket access (`libpcap`/Npcap) which cloud containers block. The Vercel + Railway deployment showcases the UI and pre-recorded demo data. **For full live capture, run locally** — see [Quick Start](#-quick-start).
+
 <p align="center">
   <img src="docs/screenshot_dashboard.png" alt="PacketSentry Web Dashboard" width="100%">
 </p>
@@ -231,6 +233,18 @@ DuckDB answers **"what happened"**. ChromaDB answers **"what does this look like
 ---
 
 ## 🚀 Quick Start
+
+### What Works Where
+
+| Feature | Vercel + Railway (Cloud) | Local |
+|---|:---:|:---:|
+| Web dashboard UI | ✅ | ✅ |
+| Demo alerts (pre-recorded) | ✅ | ✅ |
+| Live packet capture | ❌ no NIC access | ✅ requires Npcap/root |
+| PCAP replay | ❌ | ✅ no root needed |
+| TUI dashboard | ❌ | ✅ |
+| Full 7-model ensemble | ❌ | ✅ |
+| Alert history (DuckDB) | ❌ | ✅ |
 
 ### Prerequisites
 

@@ -156,6 +156,48 @@ export function Landing({ onLogin }: { onLogin: () => void }) {
           </div>
         </section>
 
+        {/* ── Run Locally ────────────────────────────── */}
+        <section className="px-6 pb-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-black border-2 border-black p-6">
+              <p className="font-mono text-[10px] text-[#00FF41] uppercase tracking-[0.2em] mb-4">
+                // RUN LOCALLY — FULL LIVE CAPTURE
+              </p>
+              <p className="font-mono text-[11px] text-gray-400 mb-5 leading-relaxed">
+                Live packet capture requires raw socket access (libpcap/Npcap) — unavailable in cloud environments.
+                Clone and run locally to unlock the full pipeline: live capture → 7-model ensemble → real-time alerts.
+              </p>
+              <div className="bg-[#111] border border-gray-700 p-4 font-mono text-[11px] text-[#00FF41] mb-5 space-y-1">
+                <div><span className="text-gray-500"># </span>clone + install</div>
+                <div>git clone https://github.com/shreyshringare/PacketSentry.git</div>
+                <div>cd PacketSentry &amp;&amp; pip install -e .</div>
+                <div className="pt-2"><span className="text-gray-500"># </span>replay a PCAP (no root required)</div>
+                <div>packetsentry replay attack.pcap</div>
+                <div className="pt-2"><span className="text-gray-500"># </span>live capture (Windows: Npcap · Linux: sudo)</div>
+                <div>packetsentry live --interface eth0</div>
+              </div>
+              <div className="flex gap-3">
+                <a
+                  href="https://github.com/shreyshringare/PacketSentry"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-[#00FF41] text-black border-2 border-[#00FF41] font-black uppercase tracking-widest px-6 py-2.5 text-xs hover:bg-black hover:text-[#00FF41] transition-colors duration-100"
+                >
+                  View on GitHub
+                </a>
+                <a
+                  href="https://github.com/shreyshringare/PacketSentry#-quick-start"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-transparent text-[#00FF41] border-2 border-[#00FF41] font-black uppercase tracking-widest px-6 py-2.5 text-xs hover:bg-[#00FF41] hover:text-black transition-colors duration-100"
+                >
+                  Quick Start Guide →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Tech stack ─────────────────────────────── */}
         <section className="px-6 pb-12">
           <div className="max-w-4xl mx-auto">
