@@ -41,11 +41,16 @@ def live(
     stop_event = threading.Event()
 
     if no_tui:
-        def _on_alert(result):
+        def _on_alert(result, features, src_ip, dst_ip, dst_port):
             import time
+            from packetsentry.alerts.severity import confidence_to_severity
             print(json.dumps({
                 "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "severity": confidence_to_severity(result.confidence),
                 "confidence": round(result.confidence, 4),
+                "src_ip": src_ip,
+                "dst_ip": dst_ip,
+                "dst_port": dst_port,
                 "scores": {k: round(v, 4) for k, v in result.scores.items()},
             }), flush=True)
 
@@ -78,6 +83,7 @@ def replay(
     pcap: str = typer.Argument(..., help="Path to PCAP file."),
     speed: float = typer.Option(0.0, help="Replay speed multiplier (0 = max speed)."),
     output: str = typer.Option("table", help="Output format: table or json."),
+    bpf: str = typer.Option("", "--bpf", help="BPF filter string (e.g. 'tcp port 80')."),
 ):
     """Replay a PCAP file through the detection pipeline."""
     import time as _time
@@ -86,7 +92,6 @@ def replay(
     from packetsentry.alerts.severity import confidence_to_severity
 
     _severity_colors = {"CRITICAL": "red", "HIGH": "yellow", "MED": "cyan", "LOW": "white"}
-    pipeline = DetectionPipeline()
     json_alerts: list[dict] = []
 
     def on_alert(result, features, src_ip, dst_ip, dst_port):
@@ -112,10 +117,13 @@ def replay(
                 f"gnn={result.scores.get('gnn_detector', 0):.2f}"
             )
 
-    if output != "json":
-        console.print(f"[bold]Replaying:[/bold] {pcap} at speed={speed}x")
+    pipeline = DetectionPipeline(alert_callback=on_alert)
 
-    summary = replay_pcap(pcap, pipeline, speed=speed, alert_callback=on_alert)
+    if output != "json":
+        bpf_note = f"  bpf={bpf!r}" if bpf else ""
+        console.print(f"[bold]Replaying:[/bold] {pcap} at speed={speed}x{bpf_note}")
+
+    summary = replay_pcap(pcap, pipeline, speed=speed, bpf_filter=bpf or None)
 
     if output == "json":
         print(json.dumps({
