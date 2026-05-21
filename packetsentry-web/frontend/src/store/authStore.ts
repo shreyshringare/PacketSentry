@@ -24,21 +24,16 @@ export const useAuthStore = create<AuthState>()(
         set({ token: null, role: null, isAuthenticated: false, isDemo: false }),
     }),
     {
-      name: "packetsentry-auth",
-      // Only persist token + role across page refreshes
-      partialize: (s: AuthState) => ({ token: s.token, role: s.role }),
+      name: "packetsentry-auth-v2",
+      // Demo sessions are ephemeral — only persist admin tokens across page loads
+      partialize: (s: AuthState) =>
+        s.role === "admin"
+          ? { token: s.token, role: s.role }
+          : { token: null, role: null },
       onRehydrateStorage: () => (state) => {
-        // Demo tokens are ephemeral — never restore a demo session across page loads.
-        // Admin tokens are long-lived and may be restored.
         if (state?.token && state?.role === "admin") {
           state.isAuthenticated = true;
           state.isDemo = false;
-        } else {
-          // Clear any stale demo session
-          state!.token = null;
-          state!.role = null;
-          state!.isAuthenticated = false;
-          state!.isDemo = false;
         }
       },
     }
