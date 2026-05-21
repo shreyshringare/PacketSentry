@@ -20,6 +20,8 @@ from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import DataTable, Footer, Header, Static
 
+_SPARK_CHARS = " ▁▂▃▄▅▆▇█"
+
 if TYPE_CHECKING:
     from packetsentry.capture.pipeline import DetectionPipeline
 
@@ -38,6 +40,73 @@ class StatsBar(Static):
             f"FLW: [bold #00FF41]{self.flows:,}[/] | "
             f"ALT: [bold red]{self.alerts:,}[/] | "
             f"[#00FF41]{self.pps:.0f} pps[/#00FF41]"
+        )
+
+
+class SparklineChart(Static):
+    """Rolling sparkline chart for packets-per-second and alert rate.
+
+    Maintains a 60-sample history (30 s at the default 0.5 s tick) and
+    renders two ASCII spark lines — one for PPS, one for alert deltas.
+    """
+
+    _HISTORY = 64  # samples to keep
+
+    DEFAULT_CSS = """
+    SparklineChart {
+        height: 4;
+        padding: 0 2;
+        background: #000000;
+        border-bottom: heavy #00FF41;
+    }
+    """
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._pps: list[float] = []
+        self._alert_deltas: list[int] = []
+        self._prev_alerts: int = 0
+
+    def push(self, pps: float, total_alerts: int) -> None:
+        """Record a new sample and refresh the widget."""
+        self._pps.append(pps)
+        if len(self._pps) > self._HISTORY:
+            self._pps = self._pps[-self._HISTORY:]
+
+        delta = max(0, total_alerts - self._prev_alerts)
+        self._prev_alerts = total_alerts
+        self._alert_deltas.append(delta)
+        if len(self._alert_deltas) > self._HISTORY:
+            self._alert_deltas = self._alert_deltas[-self._HISTORY:]
+
+        self.refresh()
+
+    @staticmethod
+    def _spark(values: list[float], width: int) -> str:
+        """Convert a list of floats into a fixed-width sparkline string."""
+        if not values:
+            return _SPARK_CHARS[0] * width
+        # right-align: pad left with blanks if history shorter than width
+        padded: list[float] = (
+            [0.0] * (width - len(values)) + values[-width:]
+            if len(values) < width
+            else values[-width:]
+        )
+        peak = max(padded) or 1.0
+        n = len(_SPARK_CHARS) - 1
+        return "".join(_SPARK_CHARS[min(int(v / peak * n), n)] for v in padded)
+
+    def render(self) -> str:
+        width = 64
+        pps_line = self._spark(self._pps, width)
+        alt_line = self._spark([float(x) for x in self._alert_deltas], width)
+        peak_pps = max(self._pps) if self._pps else 0.0
+        total = self._prev_alerts
+        return (
+            f" [#555555]PPS [/#555555][#00FF41]{pps_line}[/#00FF41] "
+            f"[#555555]peak {peak_pps:.0f}/s[/#555555]\n"
+            f" [#555555]ALT [/#555555][#FF4500]{alt_line}[/#FF4500] "
+            f"[#555555]total {total}[/#555555]"
         )
 
 
@@ -135,6 +204,7 @@ class PacketSentryApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield StatsBar(id="stats-bar")
+        yield SparklineChart(id="chart")
         with Horizontal(id="main-container"):
             with Vertical(id="flow-table-container"):
                 yield DataTable(id="flow-table")
@@ -169,6 +239,10 @@ class PacketSentryApp(App):
             bar.pps = (stats["packets"] - self._last_packet_count) / dt
         self._last_packet_count = stats["packets"]
         self._last_check_time = now
+
+        # Push sample to sparkline chart
+        chart = self.query_one("#chart", SparklineChart)
+        chart.push(bar.pps, stats["alerts"])
 
     def add_flow_row(
         self, ts: str, src: str, dst: str, proto: str, nbytes: str, score: str
