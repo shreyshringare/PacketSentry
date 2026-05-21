@@ -16,10 +16,13 @@ export function TopNav() {
 
   return (
     <header className="h-11 border-b-2 border-black bg-white flex items-center justify-between px-4 shrink-0">
-      <div className="flex items-center gap-2">
+      <button
+        onClick={() => setScreen("overview")}
+        className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+      >
         <PixelShield size={18} className="text-gray-900" />
         <span className="font-bold text-sm tracking-wide">PacketSentry</span>
-      </div>
+      </button>
 
       <nav className="flex items-center gap-1">
         {TABS.map((tab) => {
