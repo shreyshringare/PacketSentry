@@ -20,6 +20,55 @@
   <a href="#-code-coverage"><img src="https://img.shields.io/badge/coverage-70%25-yellow?style=for-the-badge" alt="Coverage"></a>
 </p>
 
+---
+
+## 🚀 Quick Start
+
+Three commands to see live intrusion alerts:
+
+```bash
+git clone https://github.com/shreyshringare/PacketSentry.git
+cd PacketSentry
+pip install -e .
+packetsentry replay attack.pcap --speed 0.0
+```
+
+Output:
+```
+Replaying: attack.pcap at speed=0.0x
+  🚨 CRITICAL conf=0.94 aho=0.85 xgb=0.92 gnn=0.31
+  🚨 HIGH     conf=0.78 aho=0.00 xgb=0.81 gnn=0.65
+
+┌─────── Replay Summary ───────┐
+│ Metric   │ Value             │
+│ Packets  │ 12,847            │
+│ Flows    │ 1,234             │
+│ Alerts   │ 42                │
+│ Duration │ 3.21s             │
+└──────────┴───────────────────┘
+```
+
+> **PCAP replay requires no admin rights.** For live capture, see [Live Capture](#live-capture-with-tui-dashboard) below.
+
+### Live Capture with TUI Dashboard
+
+```bash
+# Windows (requires Npcap — https://npcap.com)
+packetsentry live --interface "Wi-Fi"
+
+# Linux (requires root or CAP_NET_RAW)
+sudo packetsentry live --interface eth0
+```
+
+### Verify Installation
+
+```bash
+python -m pytest tests/ -q
+# 241 passed ✅
+```
+
+---
+
 ## 🌍 Live Demo
 
 | | URL |
@@ -55,11 +104,12 @@
 
 ## 📋 Table of Contents
 
+- [Quick Start](#-quick-start)
+- [Live Demo](#-live-demo)
 - [Why PacketSentry?](#-why-packetsentry)
 - [Architecture](#-architecture)
 - [7-Model Ensemble](#-7-model-ensemble)
 - [Key Features](#-key-features)
-- [Quick Start](#-quick-start)
 - [Usage](#-usage)
 - [Outputs & Results](#-outputs--results)
 - [Project Structure](#-project-structure)
@@ -232,80 +282,7 @@ DuckDB answers **"what happened"**. ChromaDB answers **"what does this look like
 
 ---
 
-## 🚀 Quick Start
-
-### What Works Where
-
-| Feature | Vercel + Railway (Cloud) | Local |
-|---|:---:|:---:|
-| Web dashboard UI | ✅ | ✅ |
-| Demo alerts (pre-recorded) | ✅ | ✅ |
-| Live packet capture | ❌ no NIC access | ✅ requires Npcap/root |
-| PCAP replay | ❌ | ✅ no root needed |
-| TUI dashboard | ❌ | ✅ |
-| Full 7-model ensemble | ❌ | ✅ |
-| Alert history (DuckDB) | ❌ | ✅ |
-
-### Prerequisites
-
-| Requirement | Details |
-|-------------|---------|
-| **Python** | 3.12+ |
-| **Npcap** *(Windows only)* | [Download](https://npcap.com) — required for live capture, NOT for PCAP replay |
-| **Root/sudo** *(Linux only)* | Or `CAP_NET_RAW` capability for live capture |
-
-### Installation
-
-```bash
-# Clone the repo
-git clone https://github.com/shreyshringare/PacketSentry.git
-cd PacketSentry
-
-# Install (editable mode)
-pip install -e .
-```
-
-### Verify Installation
-
-```bash
-python -m pytest tests/ -q
-# 241 passed ✅
-```
-
----
-
 ## 📖 Usage
-
-### Replay a PCAP File (No Admin Required)
-
-```bash
-packetsentry replay attack.pcap --speed 0.0
-```
-
-Output:
-```
-Replaying: attack.pcap at speed=0.0x
-  🚨 CRITICAL conf=0.94 aho=0.85 xgb=0.92 gnn=0.31
-  🚨 HIGH     conf=0.78 aho=0.00 xgb=0.81 gnn=0.65
-
-┌─────── Replay Summary ───────┐
-│ Metric   │ Value             │
-│ Packets  │ 12,847            │
-│ Flows    │ 1,234             │
-│ Alerts   │ 42                │
-│ Duration │ 3.21s             │
-└──────────┴───────────────────┘
-```
-
-### Live Capture with TUI Dashboard
-
-```bash
-# Windows (requires Npcap)
-packetsentry live --interface "Wi-Fi"
-
-# Linux (requires root)
-sudo packetsentry live --interface eth0
-```
 
 ### View Alert History
 
